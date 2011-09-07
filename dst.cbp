@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="darkStarTracker" />
+		<Option title="dsTracker" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Option virtualFolders="addons/;src/;" />
@@ -77,6 +77,10 @@
 			<Add directory="../../../addons/ofxOpenNI/include/openni" />
 			<Add directory="../../../addons/ofxOpenNI/include/nite" />
 			<Add directory="../../../addons/ofxOpenNI/include/libusb" />
+			<Add directory="../../../addons/ofxXmlSettings/libs" />
+			<Add directory="../../../addons/ofxXmlSettings/src" />
+			<Add directory="../../../addons/ofxDirList/src" />
+			<Add directory="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src" />
 		</Compiler>
 		<Linker>
 			<Add library="fmodex" />
@@ -112,6 +116,7 @@
 			<Add after="#" />
 			<Add after="cp -r $(OF_ROOT)/export/linux/libs $(PROJECT_DIR)bin/" />
 		</ExtraCommands>
+		<Unit filename="../../../addons/ofxDirList/src/ofxDirList.h" />
 		<Unit filename="../../../addons/ofxOpenNI/include/libusb/libusb.h" />
 		<Unit filename="../../../addons/ofxOpenNI/include/nite/XnCommon.h" />
 		<Unit filename="../../../addons/ofxOpenNI/include/nite/XnV3DVector.h" />
@@ -257,6 +262,18 @@
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxTrackedUser.h" />
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxUserGenerator.cpp" />
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxUserGenerator.h" />
+		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxml.cpp" />
+		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxml.h" />
+		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxmlerror.cpp" />
+		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxmlparser.cpp" />
+		<Unit filename="../../../addons/ofxXmlSettings/src/ofxXmlSettings.cpp" />
+		<Unit filename="../../../addons/ofxXmlSettings/src/ofxXmlSettings.h" />
+		<Unit filename="src/dsUser.cpp">
+			<Option virtualFolder="src/" />
+		</Unit>
+		<Unit filename="src/dsUser.h">
+			<Option virtualFolder="src/" />
+		</Unit>
 		<Unit filename="src/main.cpp">
 			<Option virtualFolder="src/" />
 		</Unit>
@@ -266,6 +283,64 @@
 		<Unit filename="src/testApp.h">
 			<Option virtualFolder="src/" />
 		</Unit>
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiBaseObject.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiBaseObject.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiCallback.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiCallback.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiCallbackValue.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiCallbackValue.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiColor.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiColor.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiCustomImpl.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiIncludes.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTextBase.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTextBase.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiType2DSlider.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiType2DSlider.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeButtonSlider.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeButtonSlider.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeChartPlotter.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeChartPlotter.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeCustom.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeCustom.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeDrawable.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeDrawable.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeFileLister.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeFileLister.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeLabel.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeLabel.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeLogger.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeLogger.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeMultiToggle.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeMultiToggle.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypePanel.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypePanel.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeSlider.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeSlider.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeText.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeText.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeTextDropDown.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeTextDropDown.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeTextInput.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeTextInput.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeToggle.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeToggle.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeVairableLister.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeVairableLister.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeVideo.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiTypeVideo.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiValue.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiValue.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiVariablePointer.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiXmlValue.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/ofxControlPanel.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/ofxControlPanel.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleColor.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleColor.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleFileLister.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleFileLister.h" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleLogger.cpp" />
+		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/simpleLogger.h" />
 		<Extensions>
 			<lib_finder>
 				<lib name="gstreamer-0.10" />

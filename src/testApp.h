@@ -32,9 +32,7 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
 
-
 	void eventsIn(guiCallbackData & data);
-
 
 	void	setupRecording(string _filename = "");
 	void	setupGUI();
@@ -57,10 +55,9 @@ public:
 #endif
 
 	ofxUserGenerator	userGen;
-
 	xn::SceneAnalyzer   sceneGen;
 
-#if defined (TARGET_OSX) //|| defined(TARGET_LINUX) // only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
+#if defined (TARGET_OSX) || defined(TARGET_LINUX) // only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
 	ofxHardwareDriver	hardware;
 #endif
 
@@ -83,9 +80,12 @@ public:
 
 	float				pointProp, eyeProp;
 
-	float				screenZ;
-	ofRectangle			screenDims;
+    guiTypeToggle       * spTog, * scTog;
 
+    bool                isScreen;
+	float				screenZ, sphereRad;
+	ofRectangle			screenDims;
+	ofVec3f             spherePos;
 
 };
 

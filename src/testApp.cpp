@@ -28,6 +28,7 @@ void testApp::setup() {
 	viewScale = 2;
 	pointProp = 0.25;
 	eyeProp = 0.9375;
+	isScreen = true;
 
 	testBox.set(800,800,400);
 
@@ -67,6 +68,8 @@ void testApp::setup() {
 
 	screenZ = -3000;
 	screenDims.set(0, 2000, 4000, 3000);
+	spherePos.set(0,1500,0);
+	sphereRad = 750;
 
 
 
@@ -74,9 +77,9 @@ void testApp::setup() {
 
 void testApp::setupRecording(string _filename) {
 
-#if defined (TARGET_OSX) //|| defined(TARGET_LINUX) // only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
-	//hardware.setup();				// libusb direct control of motor, LED and accelerometers
-	//hardware.setLedOption(LED_OFF); // turn off the led just for yacks (or for live installation/performances ;-)
+#if defined (TARGET_OSX) || defined(TARGET_LINUX) // only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
+	hardware.setup();				// libusb direct control of motor, LED and accelerometers
+	hardware.setLedOption(LED_OFF); // turn off the led just for yacks (or for live installation/performances ;-)
 #endif
 
 
@@ -142,10 +145,6 @@ void testApp::setupGUI(){
 
 	userSelector = gui.addTextDropDown("SelectUser", "SELECT_USER", 0, t_vec);
 
-	//gui.addToggle("Hand Filtering", "HAND_FILTER_ON", isFiltering);
-	//gui.addSlider("Hand filter Factor", "HAND_FILTER_FACTOR", filterFactor, 0,1.0,false);
-	//gui.addSlider("Hand Smoothing", "HAND_SMOOTHING", HandTracker.getSmoothing(), 0,1.0,false);
-
 	gui.setWhichPanel(2);
 	gui.setWhichColumn(0);
 
@@ -169,7 +168,6 @@ void testApp::setupGUI(){
 
 	gui.addToggle("find floor", "FIND_FLOOR", isFloor);
 
-
 	gui.setWhichPanel(3);
 
 	gui.addSlider("pointTestProp", "POINT_PROP", pointProp, 0.01, 1.0, false);
@@ -182,11 +180,20 @@ void testApp::setupGUI(){
 
 	gui.addLabel("Screen Properties");
 
+    scTog = gui.addToggle("ScreenOn", "SC_ON", true);
 	gui.addSlider("ScreenX", "SC_X", screenDims.x , -10000, 10000, true);
 	gui.addSlider("ScreenY", "SC_Y", screenDims.y , 0, 10000, true);
 	gui.addSlider("ScreenW", "SC_W", screenDims.width, 1, 10000, true);
 	gui.addSlider("ScreenH", "SC_H", screenDims.height, 1, 10000, true);
 	gui.addSlider("ScreenZ", "SC_Z", screenZ , -10000, 2000, true);
+
+    gui.addLabel("Sphere Properties");
+
+    spTog = gui.addToggle("SphereOn", "SP_ON", false);
+    gui.addSlider("SphereX", "SP_X", spherePos.x , -10000, 10000, true);
+	gui.addSlider("SphereY", "SP_Y", spherePos.y , 0, 10000, true);
+	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 2000, true);
+    gui.addSlider("SphereRad", "SP_RAD", sphereRad , 1000, 7000, true);
 
 	gui.addLabel("Adjust View");
 	gui.addSlider("YRot", "Y_ROT", yRot, 0,180,false);
@@ -194,12 +201,7 @@ void testApp::setupGUI(){
 	gui.setupEvents();
 	gui.enableEvents();
 
-
-
 	ofAddListener(gui.guiEvent, this, &testApp::eventsIn);
-
-
-
 }
 
 void testApp::eventsIn(guiCallbackData & data){
@@ -211,7 +213,7 @@ void testApp::eventsIn(guiCallbackData & data){
 	}else if(data.getXmlName() == "RAW_CLOUD_ON"){
 		isRawCloud ? isRawCloud = false : isRawCloud = true;
 	}else if(data.getXmlName() == "TILT"){
-//		hardware.setTiltAngle(data.getFloat(0));
+		hardware.setTiltAngle(data.getFloat(0));
 	}else if(data.getXmlName() == "Y_ROT"){
 		yRot = data.getFloat(0);
 	}else if(data.getXmlName() == "Z_TRANS"){
@@ -235,10 +237,8 @@ void testApp::eventsIn(guiCallbackData & data){
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setEyeProp(eyeProp);
 	}else if(data.getXmlName() == "VIEW_SCALE"){
 		viewScale = data.getFloat(0);
-
 	}else if(data.getXmlName() == "FIND_FLOOR"){
 		isFloor = data.getInt(0);
-
 	}else if(data.getXmlName() == "SELECT_USER"){
 
         selectedUser = data.getInt(0) - 1;
@@ -247,6 +247,12 @@ void testApp::eventsIn(guiCallbackData & data){
 		currentUserId = 0;
 		}
 
+    }else if(data.getXmlName() == "SC_ON"){
+		isScreen = data.getInt(0);
+		if(isScreen){spTog->setValue(0,0);}else{spTog->setValue(1,0);}
+    }else if(data.getXmlName() == "SP_ON"){
+		isScreen = !data.getInt(0);
+		if(!isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
 	}else if(data.getXmlName() == "SC_Z"){
 		screenZ = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
@@ -262,10 +268,15 @@ void testApp::eventsIn(guiCallbackData & data){
 	}else if(data.getXmlName() == "SC_H"){
 		screenDims.height = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
+	}else if(data.getXmlName() == "SP_Z"){
+		spherePos.z = data.getFloat(0);
+	}else if(data.getXmlName() == "SP_X"){
+		spherePos.x = data.getFloat(0);
+	}else if(data.getXmlName() == "SP_Y"){
+		spherePos.y = data.getFloat(0);
+	}else if(data.getXmlName() == "SP_RAD"){
+		sphereRad = data.getFloat(0);
 	}
-
-
-
 
 
 }
@@ -482,7 +493,7 @@ void testApp::draw3Dscene(bool drawScreen){
 
 	}
 
-	if(drawScreen){
+	if(isScreen){
 
 		glPushMatrix();
 		ofSetColor(255);
@@ -499,6 +510,19 @@ void testApp::draw3Dscene(bool drawScreen){
 		}
 
 		glPopMatrix();
+
+	}else{
+
+
+        glPushMatrix();
+        glScalef(viewScale,viewScale,viewScale);
+        glTranslatef(spherePos.x, -(spherePos.y - floorPlane.ptPoint.Y), -spherePos.z);
+
+        ofNoFill();
+        ofSetLineWidth(1);
+        ofSphere(0, 0, 0, sphereRad);
+
+        glPopMatrix();
 	}
 
 

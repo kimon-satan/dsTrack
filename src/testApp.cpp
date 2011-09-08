@@ -240,19 +240,11 @@ void testApp::eventsIn(guiCallbackData & data){
 		isFloor = data.getInt(0);
 
 	}else if(data.getXmlName() == "SELECT_USER"){
-		currentUserId = ofToInt(data.getString(0));
-		if(currentUserId > 0){
 
-			for(int i = 0; i < dsUsers.size(); i++){
+        selectedUser = data.getInt(0) - 1;
 
-				if(dsUsers[i]->id == currentUserId){
-
-					selectedUser = i;
-					break;
-				}
-
-			}
-
+		if(selectedUser >= 0){currentUserId = dsUsers[selectedUser]->id;}else{
+		currentUserId = 0;
 		}
 
 	}else if(data.getXmlName() == "SC_Z"){

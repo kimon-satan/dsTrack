@@ -21,25 +21,14 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
 	eyeProp = 0.9375;
 	isPointing = false;
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
-
-	/*for(int i = 0; i < userGen->getWidth()* userGen->getHeight(); i++ ){
-
-	cloudPoints[i].X = 0;
-	cloudPoints[i].Y = 0;
-	cloudPoints[i].Z = 0;
-
-	}*/
-
+    isSleeping = false;
 	isIntersect = false;
-
-
 }
 
 void dsUser::update(){
 
 	userMask.setFromPixels(userGen->getUserPixels(id), userGen->getWidth(), userGen->getHeight(), OF_IMAGE_GRAYSCALE);
 	updateFeatures();
-
 
 }
 
@@ -52,9 +41,19 @@ void dsUser::updateFeatures(){
 	xn::DepthGenerator Xn_depth = depthGen->getXnDepthGenerator();
 	pDepthMap = Xn_depth.GetDepthMap();
 
-	if(!pDepthMap || !pixels )return; //in case the UserDisappeared without a callback
-
 	userGen->getXnUserGenerator().GetCoM( id, CoM_rW ); //get the center of mass
+
+	//in case the UserDisappeared without a callback
+
+	if(CoM_rW.Z == 0){
+
+         if(!isSleeping){isSleeping = true; cout << "userSleep: " << id << "\n";}
+	    return;
+
+	}else{
+
+        if(isSleeping){isSleeping = false; cout << "wakeUp: " << id << "\n";}
+	}
 
 	rot_CoM_rW.set(CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
 	rot_CoM_rW.rotate(fRotAngle,floorPoint,fRotAxis);
@@ -238,13 +237,14 @@ void dsUser::updateScreenIntersections(){
 
 void dsUser::drawMask(ofRectangle dims){
 
-	userMask.draw(dims.x, dims.y, dims.width, dims.height);
+	if(!isSleeping)userMask.draw(dims.x, dims.y, dims.width, dims.height);
 
 }
 
 
 void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
 
+    if(!isSleeping){
 	glPushMatrix();
 
 	glBegin(GL_POINTS);
@@ -269,11 +269,13 @@ void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
 	glColor3f(1.0f, 1.0f, 1.0f);
 
 	glPopMatrix();
+    }
 }
 
 
 void dsUser::drawRWFeatures(float scaling, bool pointBox){
 
+    if(!isSleeping){
 	ofNoFill();
 
 	if(isPointing){
@@ -316,7 +318,7 @@ void dsUser::drawRWFeatures(float scaling, bool pointBox){
 	}
 
 	ofSetColor(255, 255, 255);
-
+    }
 }
 
 void dsUser::drawIntersect(float mul){

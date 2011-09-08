@@ -485,7 +485,7 @@ void testApp::draw3Dscene(bool drawScreen){
 
 		for(int i = 0; i < dsUsers.size(); i++){
 		    if(isCloud)dsUsers[i]->drawPointCloud(viewScale, true, userColors[dsUsers[i]->id]);
-		    dsUsers[i]->drawRWFeatures(viewScale, false);
+		    dsUsers[i]->drawRWFeatures(viewScale, true);
 		}
 
 	}
@@ -518,6 +518,21 @@ void testApp::draw3Dscene(bool drawScreen){
 void testApp::onNewUser(int id)
 {
 	cout << "new dsUser added \n";
+    bool nAdded = false;
+
+    //first look to see if user with that id already exists
+
+  /*  for(int i = 0; i < dsUsers.size(); i++){
+
+        if(dsUsers[i]->id == id){
+            nAdded = true;
+            cout << "duplicate \n";  //actually this isn't needed anymore
+            break;
+        }
+
+    }*/
+
+    if(!nAdded){  //okay so now add a new one
 
 	dsUser * newUser = new dsUser(id, &userGen, &depthGen);
 
@@ -532,7 +547,7 @@ void testApp::onNewUser(int id)
 	dsUsers.push_back(newUser);
 	numUsers += 1;
 	userSelector->vecDropList.push_back(ofToString(id, 0));
-
+    }
 }
 
 void testApp::onLostUser(int id)
@@ -540,14 +555,17 @@ void testApp::onLostUser(int id)
 	cout << "dsUser removed \n";
 	numUsers -= 1;
 
-	for(int i = 0; i < dsUsers.size(); i ++){
+
+	for(int i = 0; i < userSelector->vecDropList.size(); i++){ //erase the menu reference
 
 		if(ofToInt(userSelector->vecDropList[i]) == id){
 
 			userSelector->vecDropList.erase(userSelector->vecDropList.begin() + i);
 
 		}
+    }
 
+    for(int i = 0; i < dsUsers.size(); i ++){
 		if(dsUsers[i]->id == id){
 
             delete dsUsers[i];

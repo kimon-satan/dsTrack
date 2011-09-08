@@ -2,7 +2,7 @@
 #define _TEST_APP
 
 #define USE_IR // Uncomment this to use infra red instead of RGB cam...
-#define USE_FILE //this is to test comitt
+#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"

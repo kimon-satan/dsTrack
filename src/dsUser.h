@@ -18,7 +18,6 @@ class myCol{
 
 public:
 
-
     myCol(){};
     myCol(int tr, int tg, int tb){
 
@@ -60,8 +59,7 @@ class dsUser{
 	void setScreen(float tz, ofRectangle tdims){screenZ = tz; screenDims = tdims;}
 
 	int id;
-
-
+	bool isAwake;
 
 	private:
 

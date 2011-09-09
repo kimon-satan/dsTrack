@@ -1,8 +1,8 @@
 #ifndef _TEST_APP
 #define _TEST_APP
 
-#define USE_IR // Uncomment this to use infra red instead of RGB cam...
-#define USE_FILE
+#define USE_IR
+//#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
@@ -66,7 +66,7 @@ public:
 
 	ofImage				allUserMasks, depthRangeMask;
 
-	float				filterFactor, smoothFactor, yRot, zTrans, yTrans,viewScale;
+	float				filterFactor, smoothFactor, yRot, xRot, zTrans, yTrans,viewScale;
 	int					selectedUser, currentUserId, numUsers;
 
 	string				minZ_rw_str, minY_rw_str, CoM_rw_str;

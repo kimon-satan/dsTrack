@@ -43,13 +43,13 @@ class dsUser{
 	void update();
 
 	void setFloorPlane(ofVec3f tPoint, ofVec3f tAxis, float tAngle);
-	void setScreenPlane(float tz, ofRectangle tdims);
 
 	void drawMask(ofRectangle dims);
 
 	void drawRWFeatures(float scaling, bool pointBox = false);
 	void drawPointCloud(float mul, bool corrected = true, myCol col = myCol(100,100,100));
 	void drawIntersect(float mul);
+	void drawSphereIntersect(float mul);
 
 	string getDataStr(int type);
 
@@ -57,14 +57,16 @@ class dsUser{
 	void setEyeProp(float temp){eyeProp = temp;}
 	void setTestBox(ofVec3f temp){testBox = temp;}
 	void setScreen(float tz, ofRectangle tdims){screenZ = tz; screenDims = tdims;}
+	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
 	int id;
-	bool isSleeping;
+	bool isSleeping, isScreen;
 
 	private:
 
 	void updateFeatures();
 	void updateScreenIntersections();
+	void updateSphereIntersections();
 	void calculatePointVector();
 
 	ofImage userMask, depthMask;
@@ -89,6 +91,9 @@ class dsUser{
 
 	float screenZ;
 	ofRectangle screenDims;
+
+	float sphereRad;
+	ofVec3f spherePos;
 
 	ofVec3f intersection;
 	bool isIntersect;

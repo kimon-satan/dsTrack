@@ -15,14 +15,14 @@ enum dataStingTypes{
 //--------------------------------------------------------------
 void testApp::setup() {
 
-	isFiltering		= false;
-	isCloud			= false;
+	isCloud			= true;
 	isRawCloud	    = false;
-	isFloor			= false;
+	isFloor			= true;
 
 	filterFactor = 0.1f;
 	smoothFactor = 0.1f;
-	yRot = 0;
+	yRot = 140;
+	xRot = 0;
 	zTrans = - 5000;
 	yTrans = 0;
 	viewScale = 2;
@@ -37,7 +37,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "multiUser.oni";
+	fileName = "morePointing.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -115,7 +115,7 @@ void testApp::setupRecording(string _filename) {
 void testApp::setupGUI(){
 
 	//gui.loadFont("MONACO.TTF", 8);
-	gui.setup("settings", 0, 0, ofGetWidth(), 700);
+	gui.setup("settings", 0, 0, ofGetWidth(), ofGetHeight());
 	gui.addPanel("Kinect Settings", 4, false);
 	gui.addPanel("User Settings", 4, false);
 	gui.addPanel("RW Calibration", 4, false);
@@ -193,10 +193,11 @@ void testApp::setupGUI(){
     gui.addSlider("SphereX", "SP_X", spherePos.x , -10000, 10000, true);
 	gui.addSlider("SphereY", "SP_Y", spherePos.y , 0, 10000, true);
 	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 2000, true);
-    gui.addSlider("SphereRad", "SP_RAD", sphereRad , 1000, 7000, true);
+    gui.addSlider("SphereRad", "SP_RAD", sphereRad , 300, 7000, true);
 
 	gui.addLabel("Adjust View");
-	gui.addSlider("YRot", "Y_ROT", yRot, 0,180,false);
+	gui.addSlider("YRot", "Y_ROT", yRot, 0,360,false);
+	gui.addSlider("XRot", "X_ROT", xRot, 0,360,false);
 
 	gui.setupEvents();
 	gui.enableEvents();
@@ -216,6 +217,8 @@ void testApp::eventsIn(guiCallbackData & data){
 		hardware.setTiltAngle(data.getFloat(0));
 	}else if(data.getXmlName() == "Y_ROT"){
 		yRot = data.getFloat(0);
+    }else if(data.getXmlName() == "X_ROT"){
+		xRot = data.getFloat(0);
 	}else if(data.getXmlName() == "Z_TRANS"){
 		zTrans = data.getFloat(0);
 	}else if(data.getXmlName() == "Y_TRANS"){
@@ -249,9 +252,11 @@ void testApp::eventsIn(guiCallbackData & data){
 
     }else if(data.getXmlName() == "SC_ON"){
 		isScreen = data.getInt(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->isScreen = isScreen;
 		if(isScreen){spTog->setValue(0,0);}else{spTog->setValue(1,0);}
     }else if(data.getXmlName() == "SP_ON"){
 		isScreen = !data.getInt(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->isScreen = isScreen;
 		if(!isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
 	}else if(data.getXmlName() == "SC_Z"){
 		screenZ = data.getFloat(0);
@@ -270,12 +275,16 @@ void testApp::eventsIn(guiCallbackData & data){
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
 	}else if(data.getXmlName() == "SP_Z"){
 		spherePos.z = data.getFloat(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_X"){
 		spherePos.x = data.getFloat(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_Y"){
 		spherePos.y = data.getFloat(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_RAD"){
 		sphereRad = data.getFloat(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
 	}
 
 
@@ -288,8 +297,8 @@ void testApp::update(){
 
 	ofBackground(100, 100, 100);
 
-#ifdef TARGET_OSX // only working on Mac at the moment
-	//hardware.update();
+#ifdef TARGET_OSX || TARGET_LINUX // only working on Mac at the moment
+	hardware.update();
 #endif
 
 	gui.update();
@@ -379,7 +388,7 @@ void testApp::draw(){
 
 			//draw masks and features for all users
 
-			 ofEnableAlphaBlending();
+            ofEnableAlphaBlending();
             for(int i=0; i < numUsers; i++){
 			ofSetColor(userColors[dsUsers[i]->id].red,userColors[dsUsers[i]->id].blue,userColors[dsUsers[i]->id].green,50);
 			dsUsers[i]->drawMask(ofRectangle(0,0,640,480)); //then mask over
@@ -391,8 +400,6 @@ void testApp::draw(){
 		glPopMatrix();
 
 
-		//if (isTrackingHands)HandTracker.drawHands();
-
 	}else if(gui.getSelectedPanel() == 2){
 
 		draw3Dscene();
@@ -400,26 +407,12 @@ void testApp::draw(){
 	}else if(gui.getSelectedPanel() == 3){
 
 		draw3Dscene();
+
 	}else if(gui.getSelectedPanel() == 4){
 
 		draw3Dscene(true);
 	}
 
-	/*string statusHardware;
-
-	 #ifdef TARGET_OSX // only working on Mac at the moment
-	 ofPoint statusAccelerometers = hardware.getAccelerometers();
-	 stringstream	statusHardwareStream;
-
-	 statusHardwareStream
-	 << "ACCELEROMETERS:"
-	 << " TILT: " << hardware.getTiltAngle() << "/" << hardware.tilt_angle
-	 << " x - " << statusAccelerometers.x
-	 << " y - " << statusAccelerometers.y
-	 << " z - " << statusAccelerometers.z;
-
-	 statusHardware = statusHardwareStream.str();
-	 #endif*/
 }
 
 
@@ -430,6 +423,7 @@ void testApp::draw3Dscene(bool drawScreen){
 	glScalef(0.1, 0.1, 0.1);
 	glTranslatef(0,yTrans,zTrans);
 	glRotatef(yRot,0,1,0);
+	glRotatef(xRot,1,0,0);
 	ofSetColor(255);
 	ofNoFill();
 
@@ -476,24 +470,7 @@ void testApp::draw3Dscene(bool drawScreen){
 
 	}
 
-
-	if(dsUsers.size() > 0 && currentUserId > 0){
-
-
-		if(isCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, true, userColors[selectedUser]);
-		if(isRawCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, false);
-		dsUsers[selectedUser]->drawRWFeatures(viewScale, true);
-
-	}else{
-
-		for(int i = 0; i < dsUsers.size(); i++){
-		    if(isCloud)dsUsers[i]->drawPointCloud(viewScale, true, userColors[dsUsers[i]->id]);
-		    dsUsers[i]->drawRWFeatures(viewScale, true);
-		}
-
-	}
-
-	if(isScreen){
+    if(isScreen){
 
 		glPushMatrix();
 		ofSetColor(255);
@@ -519,10 +496,32 @@ void testApp::draw3Dscene(bool drawScreen){
         glTranslatef(spherePos.x, -(spherePos.y - floorPlane.ptPoint.Y), -spherePos.z);
 
         ofNoFill();
+        ofSetColor(100,100,100);
         ofSetLineWidth(1);
         ofSphere(0, 0, 0, sphereRad);
 
         glPopMatrix();
+
+        for(int i =0; i < dsUsers.size(); i++){
+			dsUsers[i]->drawSphereIntersect(viewScale);
+		}
+
+
+	}
+	if(dsUsers.size() > 0 && currentUserId > 0){
+
+
+		if(isCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, true, userColors[selectedUser]);
+		if(isRawCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, false);
+		dsUsers[selectedUser]->drawRWFeatures(viewScale, true);
+
+	}else{
+
+		for(int i = 0; i < dsUsers.size(); i++){
+		    if(isCloud)dsUsers[i]->drawPointCloud(viewScale, true, userColors[dsUsers[i]->id]);
+		    dsUsers[i]->drawRWFeatures(viewScale, true);
+		}
+
 	}
 
 
@@ -536,17 +535,6 @@ void testApp::onNewUser(int id)
 	cout << "new dsUser added \n";
     bool nAdded = false;
 
-    //first look to see if user with that id already exists
-
-  /*  for(int i = 0; i < dsUsers.size(); i++){
-
-        if(dsUsers[i]->id == id){
-            nAdded = true;
-            cout << "duplicate \n";  //actually this isn't needed anymore
-            break;
-        }
-
-    }*/
 
     if(!nAdded){  //okay so now add a new one
 
@@ -558,7 +546,9 @@ void testApp::onNewUser(int id)
 	newUser->setTestBox(testBox);
 	newUser->setEyeProp(eyeProp);
 	newUser->setPointProp(pointProp);
-	newUser->setScreenPlane(screenZ, screenDims);
+	newUser->setScreen(screenZ, screenDims);
+	newUser->setSphere(spherePos, sphereRad);
+	newUser->isScreen = isScreen;
 
 	dsUsers.push_back(newUser);
 	numUsers += 1;

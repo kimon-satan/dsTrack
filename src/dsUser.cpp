@@ -8,7 +8,6 @@
  */
 
 
-
 #include "dsUser.h"
 
 dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen){
@@ -23,6 +22,7 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
     isSleeping = false;
 	isIntersect = false;
+	isScreen = true;
 }
 
 void dsUser::update(){
@@ -47,12 +47,11 @@ void dsUser::updateFeatures(){
 
 	if(CoM_rW.Z == 0){
 
-         if(!isSleeping){isSleeping = true; cout << "userSleep: " << id << "\n";}
+        if(!isSleeping)isSleeping = true;
 	    return;
 
 	}else{
-
-        if(isSleeping){isSleeping = false; cout << "wakeUp: " << id << "\n";}
+        if(isSleeping)isSleeping = false;
 	}
 
 	rot_CoM_rW.set(CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
@@ -179,14 +178,12 @@ void dsUser::updateFeatures(){
 
 	}
 
-
-
 	if(closestPoints[0].y > floorPoint.y + 1020){
 
 		u_point.average(&closestPoints[0], 10);
 		isPointing = true;
 
-		updateScreenIntersections();
+		(isScreen) ? updateScreenIntersections() : updateSphereIntersections();
 
 	}else{isPointing = false;}
 
@@ -217,7 +214,6 @@ void dsUser::updateScreenIntersections(){
 	//test to see whether it's int the bounds of the screen;
 	//this is only a 2D problem .. phew!
 
-
 	if( intersection.x > screenDims.x - screenDims.width/2
 	   && intersection.y > screenDims.y - screenDims.height/2 &&
 	   intersection.x < screenDims.x + screenDims.width/2 &&
@@ -231,6 +227,65 @@ void dsUser::updateScreenIntersections(){
 
 	}
 
+}
+
+void dsUser::updateSphereIntersections(){
+
+    //calculate the pointing vector from eyeLine to end of finger
+
+	eye_Pos.x = rot_CoM_rW.x;
+	eye_Pos.y = (eyeProp * (u_height.y - floorPoint.y))+ floorPoint.y;
+	eye_Pos.z = rot_CoM_rW.z;
+
+	u_dir = u_point - eye_Pos;
+	u_dir.normalize();
+
+    // now calculate another point beyond the sphere
+
+	float t = spherePos.z - sphereRad + eye_Pos.z/u_dir.z;
+
+	ofVec3f p2(eye_Pos.x - u_dir.x * t,
+              eye_Pos.y - u_dir.y * t,
+              eye_Pos.z - u_dir.z * t);
+
+    //create a quadratic with the sphere
+
+    double a = pow((p2.x - u_point.x),2) + pow((p2.y - u_point.y),2) + pow((p2.z - u_point.z),2);
+    double b = 2 *((p2.x-u_point.x) * (u_point.x - spherePos.x)
+               + (p2.y-u_point.y) * (u_point.y - spherePos.y)
+                + (p2.z-u_point.z) * (u_point.z - spherePos.z));
+
+    double c = pow((u_point.x-spherePos.x),2) + pow((u_point.y-spherePos.y),2) + pow((u_point.z-spherePos.z),2) - pow(sphereRad,2);
+
+    //now solve it
+
+    double delta = pow(b,2) - (4 * a * c);
+
+	if (delta > 0) { // roots are real // i.e. intersection
+
+		double arg_sqrt = sqrt(delta);
+		double root1 = (-b/(2 * a)) + (arg_sqrt/(2 * a));
+		double root2 = (-b/(2 * a)) - (arg_sqrt/(2 * a));
+
+        ofVec3f inter1, inter2;
+
+		inter1.x = u_point.x + root1 *(p2.x - u_point.x);
+		inter1.y = u_point.y + root1 *(p2.y - u_point.y);
+		inter1.z = u_point.z + root1 *(p2.z - u_point.z);
+
+		inter2.x = u_point.x + root2 *(p2.x - u_point.x);
+		inter2.y = u_point.y + root2 *(p2.y - u_point.y);
+		inter2.z = u_point.z + root2 *(p2.z - u_point.z);
+
+        (inter1.z > inter2.z) ? intersection = inter1 : intersection = inter2;
+
+        isIntersect = true;
+
+	}else{
+
+        intersection = p2;
+		isIntersect = false; // a miss !
+	}
 
 
 }
@@ -324,10 +379,20 @@ void dsUser::drawRWFeatures(float scaling, bool pointBox){
 void dsUser::drawIntersect(float mul){
 
 	if(isPointing){
-	ofFill();
-	ofSetColor(255, 0, 0);
-	ofCircle(intersection.x * mul, -(intersection.y - floorPoint.y) * mul, 150);
+        ofFill();
+        ofSetColor(255, 0, 0);
+        ofCircle(intersection.x * mul, -(intersection.y - floorPoint.y) * mul, 150);
 
+	}
+
+}
+
+void dsUser::drawSphereIntersect(float mul){
+
+	if(isPointing){
+        ofFill();
+        (isIntersect) ? ofSetColor(0, 255, 0): ofSetColor(255,0,0);
+        ofBox(intersection.x * mul, -(intersection.y - floorPoint.y) * mul, -intersection.z * mul, 150);
 	}
 
 }
@@ -364,12 +429,6 @@ void dsUser::setFloorPlane(ofVec3f tPoint, ofVec3f tAxis, float tAngle){
 
 }
 
-void dsUser::setScreenPlane(float tz, ofRectangle tdims){
-
-	screenZ = tz;
-	screenDims = tdims;
-
-}
 
 dsUser::~dsUser(){
 

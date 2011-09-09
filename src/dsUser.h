@@ -80,7 +80,7 @@ class dsUser{
 
 	int uhZx_Thresh, numCloudPoints;
 
-	bool isPointing;
+	bool isPointing, hpFound;
 
     ofVec3f sternum;
 	float eyeProp, pointProp, pointThresh;

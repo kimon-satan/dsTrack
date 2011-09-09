@@ -94,9 +94,8 @@ void dsUser::updateFeatures(){
 	u_height.x = 0;
 	u_height.z = 0;
 
-	ofVec3f highestPoints[10];
-																			//ignore people shorter than 1m !
-	for(int i = 0; i < 10; i++)highestPoints[i] = floorPoint.y + 1000 + i; //a ranked list of min heights
+	ofVec3f highestPoints[10] = {1000}; //ignore people shorter than 1m !
+
 
 	for(int i = 0; i < numCloudPoints; i++){
 
@@ -122,110 +121,69 @@ void dsUser::updateFeatures(){
 
 	}
 
-	//find mean highest point
 
-	u_height.average(&highestPoints[0], 10);
+    if(highestPoints[0].y > 0){ //meaning at least 10 hps found
 
+        //find mean highest point
+        u_height.average(&highestPoints[0], 10);
+        hpFound = true;
 
-	//construct the testBox
+    }else{
+
+        hpFound = false;
+        isPointing = false;
+        return;
+    }
+	//work out thresholds and body parts
 
 	pointThresh = pointProp * (u_height.y - floorPoint.y); //gives actual height of User
 
 	float sh = (u_height.y - floorPoint.y)*0.8;
 	sternum.set(rot_CoM_rW.x, sh + floorPoint.y, rot_CoM_rW.z);
 
-    //get the 2D angle between the CoM and the focus
-    /*ofVec2f focus;
-
-    (isScreen) ? focus.set(screenDims.x,screenZ) : focus.set(spherePos.x, spherePos.z);
-    ofVec2f tVec = focus - ofVec2f(rot_CoM_rW.x,rot_CoM_rW.z);
-    tVec.normalize();
-    tb_Rot = tVec.angle(ofVec2f(0,-1));
-
-    pb_xz.set(rot_CoM_rW.x, rot_CoM_rW.z - (pointThresh + testBox.z/2));
-    pb_xz.rotate(-tb_Rot, ofVec2f(rot_CoM_rW.x, rot_CoM_rW.z));
-
-	tb_TLFront.x = rot_CoM_rW.x - (testBox.x/2);
-	tb_TLFront.y = u_height.y + (testBox.y/2);
-	tb_TLFront.z = rot_CoM_rW.z - pointThresh;
-
-	tb_BRBack.x = rot_CoM_rW.x + (testBox.x/2);
-	tb_BRBack.y = u_height.y - (testBox.y/2);
-	tb_BRBack.z = rot_CoM_rW.z - (pointThresh + testBox.z);*/
-
-
-
-
 	//now test the cloudPoints to see if there is nearest pixel inside
 
-	u_point.y = 0;
-	u_point.x = 0;
-	u_point.z = 0;
+	u_point.set(0,0,0);
 
-	//ofVec3f closestPoints[10];
-	//float lowThresh = 0;
-
-/*	for(int i =0; i < 10; i++){
-		closestPoints[i].y = floorPoint.y + 1000 + i;
-	}
-*/
-
-    float currMaxDist = 0;
+	ofVec3f furthestPoints[10];
+	float distances [10] = {0};
 
     for(int i = 0; i < numCloudPoints; i ++){
 
         if(rotCloudPoints[i].y > sternum.y ){
 
             float dist = rotCloudPoints[i].distanceSquared(sternum);
-            if( dist > pow(pointThresh,2)){
+            if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 1.25, 2)){
 
-                if(dist > currMaxDist ){
-                    u_point = rotCloudPoints[i];
-                    currMaxDist = dist;
-                    }
+                for(int j = 9; j > -1; j --){ //go through the list highest to lowest
 
-            }
-        }
+					if(dist > distances[j]){
 
-    }
-
-	/*for(int i = 0; i < numCloudPoints; i++){
-
-		if((rotCloudPoints[i].x > tb_TLFront.x && rotCloudPoints[i].x < tb_BRBack.x)&&  //don't bother unless it's a contnder
-		   (rotCloudPoints[i].y < tb_TLFront.y && rotCloudPoints[i].y > tb_BRBack.y)&&
-		   (rotCloudPoints[i].z < tb_TLFront.z && rotCloudPoints[i].z > tb_BRBack.z)&&
-		   rotCloudPoints[i].y > closestPoints[0].y
-		   ){
-
-
-
-				for(int j = 9; j > -1; j --){ //go through the list highest to lowest
-
-					if(rotCloudPoints[i].y > closestPoints[j].y){
-
-						closestPoints[j] = rotCloudPoints[i];  //slots it into correct ranking position
+						distances[j] = dist;  //slots it into correct ranking position
+						furthestPoints[j] = rotCloudPoints[i];
 						break;
 
 					}
 
 				}
+            }
+        }
+
+    }
 
 
-			}
+	if(distances[0] > 0){  //meaning there are atleast 10 points
 
-	}*/
-
-	if(u_point.y > 0){
-
-		//u_point.average(&closestPoints[0], 10);
+		u_point.average(&furthestPoints[0], 10);
 		isPointing = true;
 
-		(isScreen) ? updateScreenIntersections() : updateSphereIntersections();
+		(isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
 
 	}else{
 
 	    isPointing = false;
     }
+
 
 }
 
@@ -240,6 +198,17 @@ void dsUser::updateScreenIntersections(){
 
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();
+
+	ofVec3f focus_dir = ofVec3f(screenDims.x,screenDims.y,screenZ) - u_point;
+	focus_dir.normalize();
+
+    //test that it's in the right ball park
+
+    if(!focus_dir.align(u_dir,70)){
+
+        isPointing = false;
+        return;
+    }
 
 	// now calculate the intersection with the screen
 
@@ -279,6 +248,18 @@ void dsUser::updateSphereIntersections(){
 
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();
+
+	ofVec3f focus_dir = spherePos - u_point;
+	focus_dir.normalize();
+
+    //test that it's in the right ball park
+
+    if(!focus_dir.align(u_dir,70)){
+
+        isPointing = false;
+        return;
+    }
+
 
     // now calculate another point beyond the sphere
 
@@ -371,59 +352,47 @@ void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
 void dsUser::drawRWFeatures(float scaling, bool pointBox){
 
     if(!isSleeping){
-	ofNoFill();
+        ofNoFill();
 
-	if(isPointing){
-	glPushMatrix();
-	glTranslatef(eye_Pos.x * scaling, -(eye_Pos.y - floorPoint.y) * scaling, -eye_Pos.z * scaling);
-	ofSphere(0, 0, 0, 50);
-	glPopMatrix();
+        if(isPointing){
+        glPushMatrix();
+        glTranslatef(eye_Pos.x * scaling, -(eye_Pos.y - floorPoint.y) * scaling, -eye_Pos.z * scaling);
+        ofSphere(0, 0, 0, 50);
+        glPopMatrix();
 
-		isIntersect ? ofSetColor(0,255,0) : ofSetColor(255,0,0);
+            isIntersect ? ofSetColor(0,255,0) : ofSetColor(255,0,0);
 
-		ofLine(u_point.x * scaling, -(u_point.y - floorPoint.y)* scaling, -u_point.z * scaling,
-			   intersection.x * scaling, -(intersection.y - floorPoint.y)* scaling, -intersection.z * scaling);
-	}
+            ofLine(u_point.x * scaling, -(u_point.y - floorPoint.y)* scaling, -u_point.z * scaling,
+                   intersection.x * scaling, -(intersection.y - floorPoint.y)* scaling, -intersection.z * scaling);
+        }
 
-	glPushMatrix();
-	ofFill();
-	glTranslatef(u_height.x * scaling, -(u_height.y - floorPoint.y) * scaling, -u_height.z * scaling);
-	ofSetColor(238, 130, 238);
-	ofBox(0, 0, 0, 100);
-	glPopMatrix();
+        if(hpFound){
 
-	glPushMatrix();
-	ofNoFill();
-	glTranslatef(rot_CoM_rW.x * scaling, -(rot_CoM_rW.y - floorPoint.y) * scaling, -rot_CoM_rW.z * scaling);
-	ofSetColor(0, 0, 255);
-	ofSphere(0, 0, 0, 100);
-	glPopMatrix();
+        glPushMatrix();
+        ofFill();
+        glTranslatef(u_height.x * scaling, -(u_height.y - floorPoint.y) * scaling, -u_height.z * scaling);
+        ofSetColor(238, 130, 238);
+        ofBox(0, 0, 0, 100);
+        glPopMatrix();
 
-	glPushMatrix();
-	ofNoFill();
-	glTranslatef(sternum.x * scaling, -(sternum.y - floorPoint.y) * scaling, -sternum.z * scaling);
-	ofSetColor(100, 100, 100, 100);
-	ofSphere(0, 0, 0, pointThresh * scaling);
-	glPopMatrix();
+        glPushMatrix();
+        ofNoFill();
+        glTranslatef(sternum.x * scaling, -(sternum.y - floorPoint.y) * scaling, -sternum.z * scaling);
+        ofSetColor(100, 100, 100, 100);
+        ofSphere(0, 0, 0, pointThresh * scaling);
+        glPopMatrix();
+
+        }
 
 
+        glPushMatrix();
+        ofNoFill();
+        glTranslatef(rot_CoM_rW.x * scaling, -(rot_CoM_rW.y - floorPoint.y) * scaling, -rot_CoM_rW.z * scaling);
+        ofSetColor(0, 0, 255);
+        ofSphere(0, 0, 0, 100);
+        glPopMatrix();
 
-
-
-	/*if(pointBox){
-
-		ofSetColor(255, 255, 255);
-		ofNoFill();
-		ofPoint mid = (tb_BRBack + tb_TLFront)/2;
-		glPushMatrix();
-		glTranslatef(pb_xz.x * scaling, -(mid.y - floorPoint.y) * scaling, -pb_xz.y * scaling);
-		glRotatef(-tb_Rot,0,1,0);
-		glScalef(testBox.x, testBox.y, testBox.z);
-		ofBox(scaling);
-		glPopMatrix();
-	} */
-
-	ofSetColor(255, 255, 255);
+        ofSetColor(255, 255, 255);
     }
 }
 

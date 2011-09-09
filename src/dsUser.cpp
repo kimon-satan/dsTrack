@@ -18,12 +18,13 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
 	uhZx_Thresh = 100;
 	pointProp = 0.25;
 	eyeProp = 0.9375;
+	sternProp = 0.8;
 	isPointing = false;
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
     isSleeping = false;
 	isIntersect = false;
 	isScreen = true;
-	tb_Rot = 0;
+
 }
 
 void dsUser::update(){
@@ -138,7 +139,7 @@ void dsUser::updateFeatures(){
 
 	pointThresh = pointProp * (u_height.y - floorPoint.y); //gives actual height of User
 
-	float sh = (u_height.y - floorPoint.y)*0.8;
+	float sh = (u_height.y - floorPoint.y) * sternProp;
 	sternum.set(rot_CoM_rW.x, sh + floorPoint.y, rot_CoM_rW.z);
 
 	//now test the cloudPoints to see if there is nearest pixel inside
@@ -153,7 +154,7 @@ void dsUser::updateFeatures(){
         if(rotCloudPoints[i].y > sternum.y ){
 
             float dist = rotCloudPoints[i].distanceSquared(sternum);
-            if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 1.25, 2)){
+            if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 2, 2)){
 
                 for(int j = 9; j > -1; j --){ //go through the list highest to lowest
 
@@ -452,6 +453,5 @@ void dsUser::setFloorPlane(ofVec3f tPoint, ofVec3f tAxis, float tAngle){
 
 dsUser::~dsUser(){
 
-	delete []cloudPoints; //for some reason dynamic memory not working on Linux ?!
-
+	delete []cloudPoints;
 };

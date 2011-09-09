@@ -55,7 +55,7 @@ class dsUser{
 
 	void setPointProp(float temp){pointProp = temp;}
 	void setEyeProp(float temp){eyeProp = temp;}
-	void setTestBox(ofVec3f temp){testBox = temp;}
+	void setSternProp(float temp){sternProp = temp;}
 	void setScreen(float tz, ofRectangle tdims){screenZ = tz; screenDims = tdims;}
 	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
@@ -72,7 +72,7 @@ class dsUser{
 	ofImage userMask, depthMask;
 	ofxUserGenerator * userGen;
 	ofxDepthGenerator * depthGen;
-	XnPoint3D  * cloudPoints;  //[307200];
+	XnPoint3D  * cloudPoints;
 	vector <ofVec3f> rotCloudPoints;
 
 	ofVec3f floorPoint ,fRotAxis;
@@ -83,13 +83,9 @@ class dsUser{
 	bool isPointing, hpFound;
 
     ofVec3f sternum;
-	float eyeProp, pointProp, pointThresh;
+	float eyeProp, pointProp, sternProp, pointThresh;
 
 	ofVec3f rot_CoM_rW, u_height, u_point, eye_Pos, u_dir;
-	ofVec3f tb_TLFront, tb_BRBack, testBox;
-
-    float tb_Rot;
-    ofVec2f pb_xz;
 
 	XnPoint3D CoM_rW;
 

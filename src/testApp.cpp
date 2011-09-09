@@ -29,6 +29,7 @@ void testApp::setup() {
 	pointProp = 0.25;
 	eyeProp = 0.9375;
 	isScreen = true;
+	sternProp = 0.8;
 
 	testBox.set(800,800,400);
 
@@ -37,7 +38,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "multiUser.oni";
+	fileName = "morePointing.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -55,10 +56,10 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-
-
-	setupGUI();
-
+	screenZ = -3000;
+	screenDims.set(0, 2000, 4000, 3000);
+	spherePos.set(0,1500,0);
+	sphereRad = 750;
 	floorPlane.ptPoint.X = 0;
 	floorPlane.ptPoint.Y = 0;
 	floorPlane.ptPoint.Z = 0;
@@ -66,10 +67,11 @@ void testApp::setup() {
 	floorPlane.vNormal.Y = 0;
 	floorPlane.vNormal.Z = 0;
 
-	screenZ = -3000;
-	screenDims.set(0, 2000, 4000, 3000);
-	spherePos.set(0,1500,0);
-	sphereRad = 750;
+	setupGUI();
+
+
+
+
 
 
 
@@ -77,9 +79,11 @@ void testApp::setup() {
 
 void testApp::setupRecording(string _filename) {
 
-#if defined (TARGET_OSX) || defined(TARGET_LINUX) // only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
+#if defined (TARGET_OSX) || defined(TARGET_LINUX)// only working on Mac/Linux at the moment (but on Linux you need to run as sudo...)
+	if(fileName == ""){
 	hardware.setup();				// libusb direct control of motor, LED and accelerometers
 	hardware.setLedOption(LED_OFF); // turn off the led just for yacks (or for live installation/performances ;-)
+	}
 #endif
 
 
@@ -117,7 +121,6 @@ void testApp::setupGUI(){
 	//gui.loadFont("MONACO.TTF", 8);
 	gui.setup("settings", 0, 0, ofGetWidth(), ofGetHeight());
 	gui.addPanel("Kinect Settings", 4, false);
-	gui.addPanel("User Settings", 4, false);
 	gui.addPanel("RW Calibration", 4, false);
 	gui.addPanel("Pointing Calibration", 4, false);
 	gui.addPanel("Projection Screen", 4, false);
@@ -126,9 +129,6 @@ void testApp::setupGUI(){
 	gui.setWhichColumn(0);
 
 	gui.addSlider("tilt", "TILT", 0, -35, 35, false);
-
-	gui.setWhichPanel(1);
-	gui.setWhichColumn(0);
 
 	vector <guiVariablePointer> t_vars;
 
@@ -145,16 +145,13 @@ void testApp::setupGUI(){
 
 	userSelector = gui.addTextDropDown("SelectUser", "SELECT_USER", 0, t_vec);
 
-	gui.setWhichPanel(2);
+	gui.setWhichPanel(1);
 	gui.setWhichColumn(0);
 
 	gui.addSlider("YRot", "Y_ROT", yRot, 0,180,false);
 	gui.addSlider("YTrans", "Y_TRANS", yTrans, -10000,10000,false);
 	gui.addSlider("ZTrans", "Z_TRANS", zTrans, -10000,10000,false);
 	gui.addSlider("viewScale", "VIEW_SCALE", viewScale, 1,4,false);
-
-	gui.addToggle("isCloud", "CLOUD_ON", isCloud);
-	gui.addToggle("isRawCloud", "RAW_CLOUD_ON", isRawCloud);
 
 	vector <guiVariablePointer> f_vars;
 
@@ -168,15 +165,13 @@ void testApp::setupGUI(){
 
 	gui.addToggle("find floor", "FIND_FLOOR", isFloor);
 
-	gui.setWhichPanel(3);
+	gui.setWhichPanel(2);
 
 	gui.addSlider("pointTestProp", "POINT_PROP", pointProp, 0.01, 1.0, false);
 	gui.addSlider("eyeProp", "EYE_PROP", eyeProp, 0.01, 1.0, false);
-	gui.addSlider("testBox.width", "TBW", testBox.x, 200, 2000, true);
-	gui.addSlider("testBox.height", "TBH", testBox.y, 200, 2000, true);
-	gui.addSlider("testBox.depth", "TBD", testBox.z, 200, 2000, true);
+	gui.addSlider("sternProp", "STERN_PROP", sternProp, 0.01, 1.0, false);
 
-	gui.setWhichPanel(4);
+	gui.setWhichPanel(3);
 
 	gui.addLabel("Screen Properties");
 
@@ -190,10 +185,10 @@ void testApp::setupGUI(){
     gui.addLabel("Sphere Properties");
 
     spTog = gui.addToggle("SphereOn", "SP_ON", false);
-    gui.addSlider("SphereX", "SP_X", spherePos.x , -10000, 10000, true);
-	gui.addSlider("SphereY", "SP_Y", spherePos.y , 0, 10000, true);
-	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 2000, true);
-    gui.addSlider("SphereRad", "SP_RAD", sphereRad , 300, 7000, true);
+    gui.addSlider("SphereX", "SP_X", spherePos.x , -10000, 10000, false);
+	gui.addSlider("SphereY", "SP_Y", spherePos.y , 0, 10000, false);
+	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 5000, false);
+    gui.addSlider("SphereRad", "SP_RAD", sphereRad , 100, 3500, false);
 
 	gui.addLabel("Adjust View");
 	gui.addSlider("YRot", "Y_ROT", yRot, 0,360,false);
@@ -207,13 +202,8 @@ void testApp::setupGUI(){
 
 void testApp::eventsIn(guiCallbackData & data){
 
-    if(data.getXmlName() == "HAND_FILTER_ON"){
-		isFiltering = (isFiltering +1)%1;
-	}else if(data.getXmlName() == "CLOUD_ON"){
-		(isCloud ? isCloud = false : isCloud = true);
-	}else if(data.getXmlName() == "RAW_CLOUD_ON"){
-		isRawCloud ? isRawCloud = false : isRawCloud = true;
-	}else if(data.getXmlName() == "TILT"){
+
+	if(data.getXmlName() == "TILT"){
 		hardware.setTiltAngle(data.getFloat(0));
 	}else if(data.getXmlName() == "Y_ROT"){
 		yRot = data.getFloat(0);
@@ -223,21 +213,15 @@ void testApp::eventsIn(guiCallbackData & data){
 		zTrans = data.getFloat(0);
 	}else if(data.getXmlName() == "Y_TRANS"){
 		yTrans = data.getFloat(0);
-	}else if(data.getXmlName() == "TBW"){
-		testBox.x = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setTestBox(testBox);
-	}else if(data.getXmlName() == "TBH"){
-		testBox.y = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setTestBox(testBox);
-	}else if(data.getXmlName() == "TBD"){
-		testBox.z = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setTestBox(testBox);
 	}else if(data.getXmlName() == "POINT_PROP"){
 		pointProp = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setPointProp(pointProp);
 	}else if(data.getXmlName() == "EYE_PROP"){
 		eyeProp = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setEyeProp(eyeProp);
+    }else if(data.getXmlName() == "STERN_PROP"){
+		sternProp = data.getFloat(0);
+		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSternProp(sternProp);
 	}else if(data.getXmlName() == "VIEW_SCALE"){
 		viewScale = data.getFloat(0);
 	}else if(data.getXmlName() == "FIND_FLOOR"){
@@ -359,22 +343,13 @@ void testApp::draw(){
 
 
 	if(gui.getSelectedPanel() == 0){
-		glPushMatrix();
-		glTranslatef(500, 70, 0);
-		glScalef(0.6, 0.6, 1);
-
-		depthGen.draw(0,480, 640, 480);
-		imageGen.draw(0, 0, 640, 480);
-
-		glPopMatrix();
-
-	}else if(gui.getSelectedPanel() == 1){
 
 		glPushMatrix();
 		glTranslatef(400, 70, 0);
 		glScalef(0.7, 0.7, 1);
 
 		imageGen.draw(0, 0, 640, 480); // first draw the image
+        depthGen.draw(0,480, 640, 480);
 
 		if(dsUsers.size() > 0 && currentUserId > 0){
 
@@ -400,15 +375,15 @@ void testApp::draw(){
 		glPopMatrix();
 
 
+	}else if(gui.getSelectedPanel() == 1){
+
+		draw3Dscene();
+
 	}else if(gui.getSelectedPanel() == 2){
 
 		draw3Dscene();
 
 	}else if(gui.getSelectedPanel() == 3){
-
-		draw3Dscene();
-
-	}else if(gui.getSelectedPanel() == 4){
 
 		draw3Dscene(true);
 	}
@@ -524,8 +499,6 @@ void testApp::draw3Dscene(bool drawScreen){
 
 	}
 
-
-
 	glPopMatrix();
 }
 
@@ -543,9 +516,9 @@ void testApp::onNewUser(int id)
 		newUser->setFloorPlane(ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z),
 								 correctAxis, correctAngle);
 
-	newUser->setTestBox(testBox);
 	newUser->setEyeProp(eyeProp);
 	newUser->setPointProp(pointProp);
+	newUser->setSternProp(sternProp);
 	newUser->setScreen(screenZ, screenDims);
 	newUser->setSphere(spherePos, sphereRad);
 	newUser->isScreen = isScreen;

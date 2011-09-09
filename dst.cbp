@@ -5,7 +5,7 @@
 		<Option title="dsTracker" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="addons/;src/;" />
+		<Option virtualFolders="addons/;src/;oni/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/$(PROJECT_NAME)_debug" prefix_auto="1" extension_auto="1" />
@@ -268,6 +268,15 @@
 		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxmlparser.cpp" />
 		<Unit filename="../../../addons/ofxXmlSettings/src/ofxXmlSettings.cpp" />
 		<Unit filename="../../../addons/ofxXmlSettings/src/ofxXmlSettings.h" />
+		<Unit filename="bin/data/morePointing.oni">
+			<Option virtualFolder="oni/" />
+		</Unit>
+		<Unit filename="bin/data/multiUser.oni">
+			<Option virtualFolder="oni/" />
+		</Unit>
+		<Unit filename="bin/data/testFootage.oni">
+			<Option virtualFolder="oni/" />
+		</Unit>
 		<Unit filename="src/dsUser.cpp">
 			<Option virtualFolder="src/" />
 		</Unit>

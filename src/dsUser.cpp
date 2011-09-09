@@ -23,6 +23,7 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
     isSleeping = false;
 	isIntersect = false;
 	isScreen = true;
+	tb_Rot = 0;
 }
 
 void dsUser::update(){
@@ -127,9 +128,22 @@ void dsUser::updateFeatures(){
 
 
 	//construct the testBox
-	float pointThresh;
 
 	pointThresh = pointProp * (u_height.y - floorPoint.y); //gives actual height of User
+
+	float sh = (u_height.y - floorPoint.y)*0.8;
+	sternum.set(rot_CoM_rW.x, sh + floorPoint.y, rot_CoM_rW.z);
+
+    //get the 2D angle between the CoM and the focus
+    /*ofVec2f focus;
+
+    (isScreen) ? focus.set(screenDims.x,screenZ) : focus.set(spherePos.x, spherePos.z);
+    ofVec2f tVec = focus - ofVec2f(rot_CoM_rW.x,rot_CoM_rW.z);
+    tVec.normalize();
+    tb_Rot = tVec.angle(ofVec2f(0,-1));
+
+    pb_xz.set(rot_CoM_rW.x, rot_CoM_rW.z - (pointThresh + testBox.z/2));
+    pb_xz.rotate(-tb_Rot, ofVec2f(rot_CoM_rW.x, rot_CoM_rW.z));
 
 	tb_TLFront.x = rot_CoM_rW.x - (testBox.x/2);
 	tb_TLFront.y = u_height.y + (testBox.y/2);
@@ -137,7 +151,10 @@ void dsUser::updateFeatures(){
 
 	tb_BRBack.x = rot_CoM_rW.x + (testBox.x/2);
 	tb_BRBack.y = u_height.y - (testBox.y/2);
-	tb_BRBack.z = rot_CoM_rW.z - (pointThresh + testBox.z);
+	tb_BRBack.z = rot_CoM_rW.z - (pointThresh + testBox.z);*/
+
+
+
 
 	//now test the cloudPoints to see if there is nearest pixel inside
 
@@ -145,14 +162,34 @@ void dsUser::updateFeatures(){
 	u_point.x = 0;
 	u_point.z = 0;
 
-	ofVec3f closestPoints[10];
-	float lowThresh = 0;
+	//ofVec3f closestPoints[10];
+	//float lowThresh = 0;
 
-	for(int i =0; i < 10; i++){
+/*	for(int i =0; i < 10; i++){
 		closestPoints[i].y = floorPoint.y + 1000 + i;
 	}
+*/
 
-	for(int i = 0; i < numCloudPoints; i++){
+    float currMaxDist = 0;
+
+    for(int i = 0; i < numCloudPoints; i ++){
+
+        if(rotCloudPoints[i].y > sternum.y ){
+
+            float dist = rotCloudPoints[i].distanceSquared(sternum);
+            if( dist > pow(pointThresh,2)){
+
+                if(dist > currMaxDist ){
+                    u_point = rotCloudPoints[i];
+                    currMaxDist = dist;
+                    }
+
+            }
+        }
+
+    }
+
+	/*for(int i = 0; i < numCloudPoints; i++){
 
 		if((rotCloudPoints[i].x > tb_TLFront.x && rotCloudPoints[i].x < tb_BRBack.x)&&  //don't bother unless it's a contnder
 		   (rotCloudPoints[i].y < tb_TLFront.y && rotCloudPoints[i].y > tb_BRBack.y)&&
@@ -176,16 +213,19 @@ void dsUser::updateFeatures(){
 
 			}
 
-	}
+	}*/
 
-	if(closestPoints[0].y > floorPoint.y + 1020){
+	if(u_point.y > 0){
 
-		u_point.average(&closestPoints[0], 10);
+		//u_point.average(&closestPoints[0], 10);
 		isPointing = true;
 
 		(isScreen) ? updateScreenIntersections() : updateSphereIntersections();
 
-	}else{isPointing = false;}
+	}else{
+
+	    isPointing = false;
+    }
 
 }
 
@@ -359,18 +399,29 @@ void dsUser::drawRWFeatures(float scaling, bool pointBox){
 	ofSphere(0, 0, 0, 100);
 	glPopMatrix();
 
+	glPushMatrix();
+	ofNoFill();
+	glTranslatef(sternum.x * scaling, -(sternum.y - floorPoint.y) * scaling, -sternum.z * scaling);
+	ofSetColor(100, 100, 100, 100);
+	ofSphere(0, 0, 0, pointThresh * scaling);
+	glPopMatrix();
 
-	if(pointBox){
+
+
+
+
+	/*if(pointBox){
 
 		ofSetColor(255, 255, 255);
 		ofNoFill();
 		ofPoint mid = (tb_BRBack + tb_TLFront)/2;
 		glPushMatrix();
-		glTranslatef(mid.x * scaling, -(mid.y - floorPoint.y) * scaling, -mid.z * scaling);
+		glTranslatef(pb_xz.x * scaling, -(mid.y - floorPoint.y) * scaling, -pb_xz.y * scaling);
+		glRotatef(-tb_Rot,0,1,0);
 		glScalef(testBox.x, testBox.y, testBox.z);
 		ofBox(scaling);
 		glPopMatrix();
-	}
+	} */
 
 	ofSetColor(255, 255, 255);
     }

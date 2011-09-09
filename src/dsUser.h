@@ -82,10 +82,14 @@ class dsUser{
 
 	bool isPointing;
 
-	float eyeProp, pointProp;
+    ofVec3f sternum;
+	float eyeProp, pointProp, pointThresh;
 
 	ofVec3f rot_CoM_rW, u_height, u_point, eye_Pos, u_dir;
 	ofVec3f tb_TLFront, tb_BRBack, testBox;
+
+    float tb_Rot;
+    ofVec2f pb_xz;
 
 	XnPoint3D CoM_rW;
 

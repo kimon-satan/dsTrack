@@ -37,7 +37,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "morePointing.oni";
+	fileName = "multiUser.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -297,7 +297,7 @@ void testApp::update(){
 
 	ofBackground(100, 100, 100);
 
-#ifdef TARGET_OSX || TARGET_LINUX // only working on Mac at the moment
+#ifdef TARGET_OSX  // only working on Mac at the moment
 	hardware.update();
 #endif
 

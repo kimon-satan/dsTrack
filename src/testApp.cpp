@@ -31,7 +31,6 @@ void testApp::setup() {
 	isScreen = true;
 	sternProp = 0.8;
 
-	testBox.set(800,800,400);
 
 	selectedUser = 0;
 	numUsers = 0;
@@ -148,10 +147,8 @@ void testApp::setupGUI(){
 	gui.setWhichPanel(1);
 	gui.setWhichColumn(0);
 
-	gui.addSlider("YRot", "Y_ROT", yRot, 0,180,false);
-	gui.addSlider("YTrans", "Y_TRANS", yTrans, -10000,10000,false);
-	gui.addSlider("ZTrans", "Z_TRANS", zTrans, -10000,10000,false);
-	gui.addSlider("viewScale", "VIEW_SCALE", viewScale, 1,4,false);
+    userSelector = gui.addTextDropDown("SelectUser", "SELECT_USER", 0, t_vec);
+    gui.addVariableLister("User Data", t_vars);
 
 	vector <guiVariablePointer> f_vars;
 
@@ -190,10 +187,6 @@ void testApp::setupGUI(){
 	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 5000, false);
     gui.addSlider("SphereRad", "SP_RAD", sphereRad , 100, 3500, false);
 
-	gui.addLabel("Adjust View");
-	gui.addSlider("YRot", "Y_ROT", yRot, 0,360,false);
-	gui.addSlider("XRot", "X_ROT", xRot, 0,360,false);
-
 	gui.setupEvents();
 	gui.enableEvents();
 
@@ -205,14 +198,6 @@ void testApp::eventsIn(guiCallbackData & data){
 
 	if(data.getXmlName() == "TILT"){
 		hardware.setTiltAngle(data.getFloat(0));
-	}else if(data.getXmlName() == "Y_ROT"){
-		yRot = data.getFloat(0);
-    }else if(data.getXmlName() == "X_ROT"){
-		xRot = data.getFloat(0);
-	}else if(data.getXmlName() == "Z_TRANS"){
-		zTrans = data.getFloat(0);
-	}else if(data.getXmlName() == "Y_TRANS"){
-		yTrans = data.getFloat(0);
 	}else if(data.getXmlName() == "POINT_PROP"){
 		pointProp = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setPointProp(pointProp);
@@ -222,8 +207,6 @@ void testApp::eventsIn(guiCallbackData & data){
     }else if(data.getXmlName() == "STERN_PROP"){
 		sternProp = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSternProp(sternProp);
-	}else if(data.getXmlName() == "VIEW_SCALE"){
-		viewScale = data.getFloat(0);
 	}else if(data.getXmlName() == "FIND_FLOOR"){
 		isFloor = data.getInt(0);
 	}else if(data.getXmlName() == "SELECT_USER"){
@@ -329,8 +312,6 @@ void testApp::update(){
 								  correctAxis, correctAngle);
 		}
 	}
-
-
 
 
 }
@@ -560,7 +541,61 @@ void testApp::keyPressed(int key){
 
 	switch (key) {
 
+        case 'w':
+        xRot += 1;
+        if(xRot < 0 || xRot > 360)xRot = 0;
+        break;
 
+        case 'q':
+        xRot -=1;
+        if(xRot < 0 || xRot > 360)xRot = 0;
+        break;
+
+        case 's':
+        yRot +=1;
+        if(yRot < 0 || yRot > 360)yRot = 0;
+        break;
+
+        case 'a':
+        yRot -=1;
+        if(yRot < 0 || yRot > 360)yRot = 0;
+        break;
+
+        case 'x':
+        zRot +=1;
+        if(zRot < 0 || zRot > 360)zRot = 0;
+        break;
+
+        case 'z':
+        zRot -=1;
+        if(zRot < 0 || zRot > 360)zRot = 0;
+        break;
+
+       case '<':
+       zTrans += 30;
+       break;
+
+       case '>':
+       zTrans -= 30;
+       break;
+
+        case OF_KEY_UP:
+        yTrans += 30;
+        break;
+
+        case OF_KEY_DOWN:
+        yTrans -= 30;
+        break;
+
+        case '+':
+        viewScale += 0.01;
+        if(viewScale > 4)viewScale = 4;
+        break;
+
+        case '-':
+        viewScale -= 0.01;
+        if(viewScale < 1)viewScale = 1;
+        break;
 	}
 
 }

@@ -67,7 +67,7 @@ public:
 
 	ofImage				allUserMasks, depthRangeMask;
 
-	float				filterFactor, smoothFactor, yRot, xRot, zTrans, yTrans,viewScale;
+	float				filterFactor, smoothFactor, yRot, xRot, zRot, zTrans, yTrans, viewScale;
 	int					selectedUser, currentUserId, numUsers;
 
 	string				minZ_rw_str, minY_rw_str, CoM_rw_str;
@@ -75,7 +75,7 @@ public:
 	float			    correctAngle;
 	ofVec3f				correctAxis;
 
-	ofVec3f				kinectPos, testBox;
+	ofVec3f				kinectPos;
 
 	XnPlane3D			floorPlane;
 

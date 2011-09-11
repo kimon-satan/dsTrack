@@ -1,0 +1,24 @@
+Dark Star Tracker - developed by Simon Katan
+
+For MOTA - Museum of Transitory Art Ljubljana
+
+This is an OpenFrameworks tracking program which uses X-Box Kinect to detect pointing gestures in users without need for a calibration pose.
+
+Dependencies:
+
+OF 007
+ofxControlPanel
+ofxOpenNI - not the roxlu version (also I hacked it a little bit). I'll post details here eventually
+ofxXmlSettings
+ofxDirList
+
+OpenNI/NITE - the standard install from the website
+
+Platforms:
+tested on MAC and LINUX Ubuntu Studio 11.04
+
+
+
+
+
+

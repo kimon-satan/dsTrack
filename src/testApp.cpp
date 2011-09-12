@@ -32,6 +32,7 @@ void testApp::setup() {
 	sternProp = 0.8;
 
 
+
 	selectedUser = 0;
 	numUsers = 0;
 	currentUserId =0;
@@ -55,10 +56,16 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-	screenZ = -3000;
-	screenDims.set(0, 2000, 4000, 3000);
+    screenDims.set(4000,3000);
+    screenCenter.set(0,2000);
+    calcNewScreenPosition();
+    calculateScreenPlane();
+
+	screenDims.set(4000, 3000);
+
 	spherePos.set(0,1500,0);
 	sphereRad = 750;
+
 	floorPlane.ptPoint.X = 0;
 	floorPlane.ptPoint.Y = 0;
 	floorPlane.ptPoint.Z = 0;
@@ -173,11 +180,12 @@ void testApp::setupGUI(){
 	gui.addLabel("Screen Properties");
 
     scTog = gui.addToggle("ScreenOn", "SC_ON", true);
-	gui.addSlider("ScreenX", "SC_X", screenDims.x , -10000, 10000, true);
-	gui.addSlider("ScreenY", "SC_Y", screenDims.y , 0, 10000, true);
-	gui.addSlider("ScreenW", "SC_W", screenDims.width, 1, 10000, true);
-	gui.addSlider("ScreenH", "SC_H", screenDims.height, 1, 10000, true);
-	gui.addSlider("ScreenZ", "SC_Z", screenZ , -10000, 2000, true);
+	gui.addSlider("ScreenW", "SC_W", screenDims.x , 1000, 10000, true);
+	gui.addSlider("ScreenH", "SC_H", screenDims.y , 1000, 10000, true);
+	gui.addSlider("ScreenX", "SC_X", screenCenter.x , -5000, 5000, true);
+	gui.addSlider("ScreenY", "SC_Y", screenCenter.y , -5000, 5000, true);
+	gui.addSlider("ScreenZ", "SC_Z", screenCenter.z , -5000, 5000, true);
+	gui.addSlider("ScreenRot", "SC_ROT", screenRot, -180, 180,true);
 
     gui.addLabel("Sphere Properties");
 
@@ -225,21 +233,24 @@ void testApp::eventsIn(guiCallbackData & data){
 		isScreen = !data.getInt(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->isScreen = isScreen;
 		if(!isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
-	}else if(data.getXmlName() == "SC_Z"){
-		screenZ = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
 	}else if(data.getXmlName() == "SC_X"){
-		screenDims.x = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
+		screenCenter.x = data.getFloat(0);
+		calcNewScreenPosition();
 	}else if(data.getXmlName() == "SC_Y"){
+		screenCenter.y = data.getFloat(0);
+		calcNewScreenPosition();
+	}else if(data.getXmlName() == "SC_Z"){
+		screenCenter.z = data.getFloat(0);
+		calcNewScreenPosition();
+    }else if(data.getXmlName() == "SC_W"){
+		screenDims.x = data.getFloat(0);
+		calcNewScreenPosition();
+    }else if(data.getXmlName() == "SC_H"){
 		screenDims.y = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
-	}else if(data.getXmlName() == "SC_W"){
-		screenDims.width = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
-	}else if(data.getXmlName() == "SC_H"){
-		screenDims.height = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setScreen(screenZ, screenDims);
+		calcNewScreenPosition();
+    }else if(data.getXmlName() == "SC_ROT"){
+		screenRot = data.getFloat(0);
+		calcNewScreenPosition();
 	}else if(data.getXmlName() == "SP_Z"){
 		spherePos.z = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
@@ -313,6 +324,48 @@ void testApp::update(){
 		}
 	}
 
+
+}
+
+void testApp::calcNewScreenPosition(){ //this is just for manual settings of screenPosition, size and orientation
+
+    screenP.set(screenCenter.x - (screenDims.x/2), screenCenter.y - (screenDims.y/2), screenCenter.z);
+    screenQ.set(screenCenter.x + (screenDims.x/2), screenCenter.y + (screenDims.y/2), screenCenter.z);
+    screenR.set(screenCenter.x - (screenDims.x/2), screenCenter.y + (screenDims.y/2), screenCenter.z);
+  //  screenS.set(screenCenter.x + (screenDims.x/2), screenCenter.y - (screenDims.y/2), screenCenter.z);
+
+    screenP.rotate(screenRot, screenCenter, ofVec3f(0,1,0));
+    screenQ.rotate(screenRot, screenCenter, ofVec3f(0,1,0));
+    screenR.rotate(screenRot, screenCenter, ofVec3f(0,1,0));
+   // screenS.rotate(screenRot, screenCenter, ofVec3f(0,1,0)); //this is done in calculateScreenPlane
+
+    calculateScreenPlane();
+}
+
+
+void testApp::calculateScreenPlane(){
+
+        ofVec3f pq ,pr;
+		pq = screenQ - screenP; pr = screenR - screenP;
+
+        screenCenter = screenP.getMiddle(screenQ); //in case hasn't been set
+		screenNormal = pq.getCrossed(pr);
+		screenNormal.normalize();
+		ofVec3f dV = screenNormal.dot(screenP);
+		screenD = dV.x + dV.y + dV.z;
+
+		// now get Rotation
+		screenRot = screenNormal.angle(ofVec3f(0,0,1));
+
+        //calculate point S
+        screenS = screenP.getRotated(180,screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
+
+
+        for(int i = 0; i < dsUsers.size(); i++){
+
+            dsUsers[i]->setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter);
+
+        }
 
 }
 
@@ -430,19 +483,24 @@ void testApp::draw3Dscene(bool drawScreen){
 
 		glPushMatrix();
 		ofSetColor(255);
-		glTranslatef(0, 0, -screenZ * viewScale);
+		glScalef(viewScale,viewScale,viewScale);
+		glTranslatef(0,floorPlane.ptPoint.Y,0);
+        ofLine(screenP.x, -screenP.y, -screenP.z, screenQ.x, -screenQ.y, -screenQ.z);
+        ofLine(screenP.x, -screenP.y, -screenP.z, screenR.x, -screenR.y, -screenR.z);
+        ofLine(screenQ.x, -screenQ.y, -screenQ.z, screenR.x, -screenR.y, -screenR.z);
+        ofLine(screenS.x, -screenS.y, -screenS.z, screenP.x, -screenP.y, -screenP.z);
+        ofLine(screenS.x, -screenS.y, -screenS.z, screenR.x, -screenR.y, -screenR.z);
+        ofLine(screenS.x, -screenS.y, -screenS.z, screenQ.x, -screenQ.y, -screenQ.z);
+        glPopMatrix();
 
-		ofSetRectMode(OF_RECTMODE_CENTER);
-		ofRect(screenDims.x * viewScale, -(screenDims.y -floorPlane.ptPoint.Y) * viewScale,
-												screenDims.width * viewScale,
-												screenDims.height * viewScale);
-		ofSetRectMode(OF_RECTMODE_CORNER);
+
+        glPushMatrix();
 
 		for(int i =0; i < dsUsers.size(); i++){
 			dsUsers[i]->drawIntersect(viewScale);
 		}
+        glPopMatrix();
 
-		glPopMatrix();
 
 	}else{
 
@@ -500,7 +558,7 @@ void testApp::onNewUser(int id)
 	newUser->setEyeProp(eyeProp);
 	newUser->setPointProp(pointProp);
 	newUser->setSternProp(sternProp);
-	newUser->setScreen(screenZ, screenDims);
+	newUser->setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter);
 	newUser->setSphere(spherePos, sphereRad);
 	newUser->isScreen = isScreen;
 

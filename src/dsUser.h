@@ -56,7 +56,16 @@ class dsUser{
 	void setPointProp(float temp){pointProp = temp;}
 	void setEyeProp(float temp){eyeProp = temp;}
 	void setSternProp(float temp){sternProp = temp;}
-	void setScreen(float tz, ofRectangle tdims){screenZ = tz; screenDims = tdims;}
+	void setScreen(float d, float rot, ofVec3f p, ofVec3f q, ofVec3f norm, ofVec3f centre){
+
+        screenD = d;
+        screenRot = rot;
+        screenNormal = norm;
+        screenP = p;
+        screenQ = q;
+        screenCentre = centre;
+
+	}
 	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
 	int id;
@@ -89,8 +98,8 @@ class dsUser{
 
 	XnPoint3D CoM_rW;
 
-	float screenZ;
-	ofRectangle screenDims;
+	float screenD, screenRot;
+	ofVec3f screenP, screenQ, screenNormal, screenCentre;
 
 	float sphereRad;
 	ofVec3f spherePos;

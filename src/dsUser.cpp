@@ -200,7 +200,7 @@ void dsUser::updateScreenIntersections(){
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();
 
-	ofVec3f focus_dir = ofVec3f(screenDims.x,screenDims.y,screenZ) - u_point;
+	ofVec3f focus_dir = ofVec3f(screenCentre.x,screenCentre.y,screenCentre.z) - u_point;
 	focus_dir.normalize();
 
     //test that it's in the right ball park
@@ -213,29 +213,32 @@ void dsUser::updateScreenIntersections(){
 
 	// now calculate the intersection with the screen
 
-	float t = screenZ + eye_Pos.z/u_dir.z;
+    float t = screenD - (screenNormal.x * eye_Pos.x + screenNormal.y * eye_Pos.y + screenNormal.z * eye_Pos.z);
+		t /= (screenNormal.x * u_dir.x + screenNormal.y * u_dir.y + screenNormal.z * u_dir.z);
 
-	intersection.set(
-					eye_Pos.x - u_dir.x * t,
-					 eye_Pos.y - u_dir.y * t,
-					 eye_Pos.z - u_dir.z * t
-					);
+		intersection.set(
+						 eye_Pos.x + u_dir.x * t,
+						 eye_Pos.y + u_dir.y * t,
+						 eye_Pos.z + u_dir.z * t
+						 );
 
-	//test to see whether it's int the bounds of the screen;
-	//this is only a 2D problem .. phew!
+	//rotate to axis to simplify bounds problem
 
-	if( intersection.x > screenDims.x - screenDims.width/2
-	   && intersection.y > screenDims.y - screenDims.height/2 &&
-	   intersection.x < screenDims.x + screenDims.width/2 &&
-	   intersection.y < screenDims.y + screenDims.height/2 ){
+    ofVec3f rotP = screenP.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
+	ofVec3f	rotQ = screenQ.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
 
-		isIntersect = true;
+    ofVec3f rotIntersect = intersection.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
 
-	}else{
 
-		isIntersect = false;
+	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&
+        rotIntersect.y > rotP.y && rotIntersect.y < rotQ.y){
 
-	}
+        isIntersect = true;
+
+    }else{
+        isIntersect = false;
+    }
+
 
 }
 
@@ -402,7 +405,7 @@ void dsUser::drawIntersect(float mul){
 	if(isPointing){
         ofFill();
         ofSetColor(255, 0, 0);
-        ofCircle(intersection.x * mul, -(intersection.y - floorPoint.y) * mul, 150);
+        ofSphere(intersection.x * mul, -(intersection.y - floorPoint.y) * mul, -intersection.z * mul, 150);
 
 	}
 

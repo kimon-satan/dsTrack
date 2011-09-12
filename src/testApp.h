@@ -10,8 +10,6 @@
 #include "dsUser.h"
 #include "ofxControlPanel.h"
 
-
-
 class testApp : public ofBaseApp, UserListener{
 
 public:
@@ -37,23 +35,30 @@ public:
 
 	void	setupRecording(string _filename = "");
 	void	setupGUI();
-	string fileName;
+
+    void    calculateScreenPlane();
+    void    calcNewScreenPosition();
+
+private:
+
+    string fileName;
 
 	bool				isCloud, isRawCloud;
 	bool				isFiltering, isFloor;
 
-	ofxControlPanel gui;
-    myCol userColors[10];
-	ofTrueTypeFont TTF;
-
-	ofxOpenNIContext	Context;
-	ofxDepthGenerator	depthGen;
 
 #ifdef USE_IR
 	ofxIRGenerator		imageGen;
 #else
 	ofxImageGenerator	imageGen;
 #endif
+
+    ofxControlPanel gui;
+    myCol userColors[10];
+	ofTrueTypeFont TTF;
+
+	ofxOpenNIContext	Context;
+	ofxDepthGenerator	depthGen;
 
 	ofxUserGenerator	userGen;
 	xn::SceneAnalyzer   sceneGen;
@@ -84,8 +89,10 @@ public:
     guiTypeToggle       * spTog, * scTog;
 
     bool                isScreen;
-	float				screenZ, sphereRad;
-	ofRectangle			screenDims;
+	float				screenZ, screenD, screenRot, sphereRad;
+	ofVec2f			    screenDims;
+
+	ofVec3f             screenP, screenQ, screenR, screenS, screenCenter, screenNormal;
 	ofVec3f             spherePos;
 
 };

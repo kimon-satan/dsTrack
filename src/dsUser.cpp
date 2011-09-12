@@ -224,10 +224,10 @@ void dsUser::updateScreenIntersections(){
 
 	//rotate to axis to simplify bounds problem
 
-    ofVec3f rotP = screenP.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
-	ofVec3f	rotQ = screenQ.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
+    ofVec3f rotP = screenP.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
+	ofVec3f	rotQ = screenQ.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
 
-    ofVec3f rotIntersect = intersection.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
+    ofVec3f rotIntersect = intersection.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
 
 
 	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&

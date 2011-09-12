@@ -19,6 +19,8 @@ void testApp::setup() {
 	isRawCloud	    = false;
 	isFloor			= true;
 
+	TTF.loadFont("verdana.ttf", 60, true, true);
+
 	filterFactor = 0.1f;
 	smoothFactor = 0.1f;
 	yRot = 140;
@@ -30,8 +32,6 @@ void testApp::setup() {
 	eyeProp = 0.9375;
 	isScreen = true;
 	sternProp = 0.8;
-
-
 
 	selectedUser = 0;
 	numUsers = 0;
@@ -65,7 +65,7 @@ void testApp::setup() {
 
 	spherePos.set(0,1500,0);
 	sphereRad = 750;
-
+    scCalibStage = 0;
 	floorPlane.ptPoint.X = 0;
 	floorPlane.ptPoint.Y = 0;
 	floorPlane.ptPoint.Z = 0;
@@ -74,13 +74,6 @@ void testApp::setup() {
 	floorPlane.vNormal.Z = 0;
 
 	setupGUI();
-
-
-
-
-
-
-
 }
 
 void testApp::setupRecording(string _filename) {
@@ -114,10 +107,8 @@ void testApp::setupRecording(string _filename) {
 	userGen.setMaxNumberOfUsers(10);					// use this to set dynamic max number of users (NB: that a hard upper limit is defined by MAX_NUMBER_USERS in ofxUserGenerator)
 	userGen.addUserListener(this);
 
-
 	//Context.toggleRegisterViewport();  //this fucks up realWorld proj
 	Context.toggleMirror();
-
 	//hardware.setTiltAngle(0);
 
 }
@@ -126,10 +117,9 @@ void testApp::setupGUI(){
 
 	//gui.loadFont("MONACO.TTF", 8);
 	gui.setup("settings", 0, 0, ofGetWidth(), ofGetHeight());
-	gui.addPanel("Kinect Settings", 4, false);
-	gui.addPanel("RW Calibration", 4, false);
-	gui.addPanel("Pointing Calibration", 4, false);
-	gui.addPanel("Projection Screen", 4, false);
+	gui.addPanel("Camera", 4, false);
+	gui.addPanel("User", 4, false);
+	gui.addPanel("Screen", 4, false);
 
 	gui.setWhichPanel(0);
 	gui.setWhichColumn(0);
@@ -169,17 +159,16 @@ void testApp::setupGUI(){
 
 	gui.addToggle("find floor", "FIND_FLOOR", isFloor);
 
-	gui.setWhichPanel(2);
-
 	gui.addSlider("pointTestProp", "POINT_PROP", pointProp, 0.01, 1.0, false);
 	gui.addSlider("eyeProp", "EYE_PROP", eyeProp, 0.01, 1.0, false);
 	gui.addSlider("sternProp", "STERN_PROP", sternProp, 0.01, 1.0, false);
 
-	gui.setWhichPanel(3);
+	gui.setWhichPanel(2);
 
 	gui.addLabel("Screen Properties");
 
     scTog = gui.addToggle("ScreenOn", "SC_ON", true);
+    scCalTog = gui.addToggle("Begin Calibrate", "SC_CALIB", false);
 	gui.addSlider("ScreenW", "SC_W", screenDims.x , 1000, 10000, true);
 	gui.addSlider("ScreenH", "SC_H", screenDims.y , 1000, 10000, true);
 	gui.addSlider("ScreenX", "SC_X", screenCenter.x , -5000, 5000, true);
@@ -263,6 +252,8 @@ void testApp::eventsIn(guiCallbackData & data){
 	}else if(data.getXmlName() == "SP_RAD"){
 		sphereRad = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
+	}else if(data.getXmlName() == "SC_CALIB"){
+        scCalibStage = 1;
 	}
 
 
@@ -324,6 +315,8 @@ void testApp::update(){
 		}
 	}
 
+	if(scCalibStage > 0)getScreenCalibrationPoints();
+
 
 }
 
@@ -355,17 +348,106 @@ void testApp::calculateScreenPlane(){
 		screenD = dV.x + dV.y + dV.z;
 
 		// now get Rotation
-		screenRot = screenNormal.angle(ofVec3f(0,0,1));
+		screenRot = -screenNormal.angle(ofVec3f(0,0,1));
 
         //calculate point S
         screenS = screenP.getRotated(180,screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
-
 
         for(int i = 0; i < dsUsers.size(); i++){
 
             dsUsers[i]->setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter);
 
         }
+
+}
+
+void testApp::getScreenCalibrationPoints(){
+
+    static int countdown = 5;
+    static int msecs;
+    static ofVec3f calVecTemps[20] = {ofVec3f(0,0,0)};
+   // static bool userFound;
+
+    if(scCalibStage == 1 && countdown == 5){
+
+        for(int i =0; i < dsUsers.size(); i++){
+
+            if(dsUsers[i]->isPointing){
+                selectedUser = i;
+                currentUserId = dsUsers[selectedUser]->id;
+                countdown -= 1;
+                break;
+            }
+
+        }
+
+    }
+
+    if(ofGetElapsedTimeMillis() > msecs + 1000 && scCalibStage == 10){ // if failed
+
+        msecs = ofGetElapsedTimeMillis();
+        countdown -=1;
+        if(countdown == 0){
+
+            scCalibStage = 0;
+            countdown = 5;
+            scCalTog->setValue(0,0);
+            currentUserId = 0;
+
+        }
+
+
+    }else if(ofGetElapsedTimeMillis() > msecs + 1000 && countdown > 0 && countdown < 5){ //normal routine
+
+        msecs = ofGetElapsedTimeMillis();
+
+        switch(scCalibStage){
+
+        case 1:
+        scCalString = "TOP LEFT";
+        break;
+
+        case 2:
+        scCalString = "BOTTOM RIGHT";
+        break;
+
+        case 3:
+        scCalString = "BOTTOM LEFT";
+        break;
+
+        }
+
+        countdown -= 1;
+        scCalString = ofToString(countdown,0) + " : " + scCalString;
+
+    }else if(countdown == -20){
+
+        calVecs[scCalibStage -1].average(&calVecTemps[0],20);
+        scCalibStage += 1;
+        scCalibStage = scCalibStage%4;
+        if(scCalibStage == 0){
+            countdown = 5;
+            scCalTog->setValue(0,0);
+            currentUserId = 0;
+        }else{countdown = 4;}
+
+    }else if(countdown <= 0 ){
+
+        if(dsUsers[selectedUser]->isPointing){
+        calVecTemps[-countdown] = dsUsers[selectedUser]->getUDir();
+        countdown -= 1;
+        }else{
+         scCalString = "FAILED";
+         scCalibStage = 10;
+         countdown = 3;
+        }
+
+    }
+
+
+
+
+
 
 }
 
@@ -420,6 +502,11 @@ void testApp::draw(){
 	}else if(gui.getSelectedPanel() == 3){
 
 		draw3Dscene(true);
+	}
+
+	if(scCalibStage > 0){
+        ofSetColor(255,0,0);
+        TTF.drawString(scCalString, 200,200);
 	}
 
 }

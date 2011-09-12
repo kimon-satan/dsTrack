@@ -3,7 +3,7 @@
 
 #define USE_IR
 //
-#define USE_FILE
+//#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
@@ -38,6 +38,7 @@ public:
 
     void    calculateScreenPlane();
     void    calcNewScreenPosition();
+    void    getScreenCalibrationPoints();
 
 private:
 
@@ -86,7 +87,7 @@ private:
 
 	float				pointProp, eyeProp, sternProp;
 
-    guiTypeToggle       * spTog, * scTog;
+    guiTypeToggle       * spTog, * scTog, * scCalTog;
 
     bool                isScreen;
 	float				screenZ, screenD, screenRot, sphereRad;
@@ -94,6 +95,14 @@ private:
 
 	ofVec3f             screenP, screenQ, screenR, screenS, screenCenter, screenNormal;
 	ofVec3f             spherePos;
+
+	int scCalibStage;
+	string scCalString;
+
+    ofVec3f calVecs[3];
+
+
+
 
 };
 

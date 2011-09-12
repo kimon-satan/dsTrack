@@ -68,8 +68,10 @@ class dsUser{
 	}
 	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
+	ofVec3f getUDir(){return u_dir;}
+
 	int id;
-	bool isSleeping, isScreen;
+	bool isSleeping, isScreen, isPointing;
 
 	private:
 
@@ -89,7 +91,7 @@ class dsUser{
 
 	int uhZx_Thresh, numCloudPoints;
 
-	bool isPointing, hpFound;
+	bool  hpFound;
 
     ofVec3f sternum;
 	float eyeProp, pointProp, sternProp, pointThresh;

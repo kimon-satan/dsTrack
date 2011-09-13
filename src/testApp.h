@@ -3,12 +3,13 @@
 
 #define USE_IR
 //
-//#define USE_FILE
+#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
 #include "dsUser.h"
 #include "ofxControlPanel.h"
+#include "ofxOsc.h"
 
 class testApp : public ofBaseApp, UserListener{
 
@@ -37,7 +38,8 @@ public:
 	void	setupGUI();
 
     void    calculateScreenPlane();
-    void    calcNewScreenPosition();
+    void    screenPosManual();
+    void    screenPosAuto();
     void    getScreenCalibrationPoints();
 
 private:
@@ -89,6 +91,8 @@ private:
 
     guiTypeToggle       * spTog, * scTog, * scCalTog;
 
+    guiTypeSlider       * scXsl, * scYsl,  * scZsl, * scRotsl, * scWsl, *scHsl;
+
     bool                isScreen;
 	float				screenZ, screenD, screenRot, sphereRad;
 	ofVec2f			    screenDims;
@@ -100,8 +104,6 @@ private:
 	string scCalString;
 
     ofVec3f calVecs[3];
-
-
 
 
 };

@@ -38,7 +38,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "morePointing.oni";
+	fileName = "highAngle.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -56,12 +56,10 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-    screenDims.set(4000,3000);
+    screenDims.set(1200,900);
     screenCenter.set(0,2000);
-    calcNewScreenPosition();
+    screenPosManual();
     calculateScreenPlane();
-
-	screenDims.set(4000, 3000);
 
 	spherePos.set(0,1500,0);
 	sphereRad = 750;
@@ -169,12 +167,14 @@ void testApp::setupGUI(){
 
     scTog = gui.addToggle("ScreenOn", "SC_ON", true);
     scCalTog = gui.addToggle("Begin Calibrate", "SC_CALIB", false);
-	gui.addSlider("ScreenW", "SC_W", screenDims.x , 1000, 10000, true);
-	gui.addSlider("ScreenH", "SC_H", screenDims.y , 1000, 10000, true);
-	gui.addSlider("ScreenX", "SC_X", screenCenter.x , -5000, 5000, true);
-	gui.addSlider("ScreenY", "SC_Y", screenCenter.y , -5000, 5000, true);
-	gui.addSlider("ScreenZ", "SC_Z", screenCenter.z , -5000, 5000, true);
-	gui.addSlider("ScreenRot", "SC_ROT", screenRot, -180, 180,true);
+	scWsl = gui.addSlider("ScreenW", "SC_W", screenDims.x , 500, 10000, true);
+	scHsl = gui.addSlider("ScreenH", "SC_H", screenDims.y , 500, 10000, true);
+	scXsl = gui.addSlider("ScreenX", "SC_X", screenCenter.x , -5000, 5000, true);
+	scYsl = gui.addSlider("ScreenY", "SC_Y", screenCenter.y , -5000, 5000, true);
+	scZsl = gui.addSlider("ScreenZ", "SC_Z", screenCenter.z , -5000, 5000, true);
+	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", screenRot, -180, 180,true);
+
+
 
     gui.addLabel("Sphere Properties");
 
@@ -224,22 +224,22 @@ void testApp::eventsIn(guiCallbackData & data){
 		if(!isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
 	}else if(data.getXmlName() == "SC_X"){
 		screenCenter.x = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
 	}else if(data.getXmlName() == "SC_Y"){
 		screenCenter.y = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
 	}else if(data.getXmlName() == "SC_Z"){
 		screenCenter.z = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
     }else if(data.getXmlName() == "SC_W"){
 		screenDims.x = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
     }else if(data.getXmlName() == "SC_H"){
 		screenDims.y = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
     }else if(data.getXmlName() == "SC_ROT"){
 		screenRot = data.getFloat(0);
-		calcNewScreenPosition();
+		screenPosManual();
 	}else if(data.getXmlName() == "SP_Z"){
 		spherePos.z = data.getFloat(0);
 		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
@@ -320,7 +320,7 @@ void testApp::update(){
 
 }
 
-void testApp::calcNewScreenPosition(){ //this is just for manual settings of screenPosition, size and orientation
+void testApp::screenPosManual(){ //this is just for manual settings of screenPosition, size and orientation
 
     screenP.set(screenCenter.x - (screenDims.x/2), screenCenter.y - (screenDims.y/2), screenCenter.z);
     screenQ.set(screenCenter.x + (screenDims.x/2), screenCenter.y + (screenDims.y/2), screenCenter.z);
@@ -335,6 +335,89 @@ void testApp::calcNewScreenPosition(){ //this is just for manual settings of scr
     calculateScreenPlane();
 }
 
+void testApp::screenPosAuto(){
+
+  ofVec3f p;
+
+    calVecs[0].normalize(); //are they normalized already ?
+    calVecs[1].normalize();
+    calVecs[2].normalize();
+
+    bool  pFound = false;
+    float mul = 1;
+    float dist = 10000;
+
+    while(!pFound){
+
+        ofVec3f p = (calVecs[0] * mul + dsUsers[selectedUser]->getUPoint());
+        ofVec3f r = p - ofVec3f(0,screenDims.y,0); //ray cast down y axis for size of screen
+        ofVec3f pb = dsUsers[selectedUser]->getUPoint(); //the user
+        ofVec3f pc = calVecs[2] * 10000 + dsUsers[selectedUser]->getUPoint(); //the ray to R
+
+        float a = pb.distance(pc);
+        float b = pc.distance(r);
+        float c = pb.distance(r);
+
+        float area = sqrt(((a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c))/16);
+
+        float t_dist = (area * 2)/a;
+
+        if(t_dist > dist){
+
+            pFound = true;  //the distance is staring to increase so we have already found the best point
+
+        }else{
+            dist = t_dist;
+            screenR = r;
+            screenP = p;
+            mul += 1; //maybe we need a more efficient search ...nah
+        }
+
+    }
+
+
+    // to find Q, iterate until PQ is correct length
+
+    bool qFound = false;
+
+    dist = 10000;
+    ofVec3f q = screenR; // a point on vec UR screenWidth from R
+    q.x += screenDims.x;
+    ofVec3f qb = dsUsers[selectedUser]->getUPoint(); //the user
+    ofVec3f qc = calVecs[1] * 10000 + dsUsers[selectedUser]->getUPoint(); //the ray to Q
+
+    while(!qFound){
+
+        float a = qb.distance(qc);
+        float b = qc.distance(q);
+        float c = qb.distance(q);
+
+        float area = sqrt(((a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c))/16);
+        float t_dist = (area * 2)/a;
+
+        if(t_dist > dist){
+
+            qFound = true;
+
+        }else{
+
+        screenQ = q;
+        dist = t_dist;
+        q.rotate(1,screenP,ofVec3f(0,1,0));
+
+        }
+
+    }
+
+    calculateScreenPlane();
+
+    if(abs(screenRot) > 90){
+
+        screenRot += 180;
+        screenPosManual();
+
+    }
+}
 
 void testApp::calculateScreenPlane(){
 
@@ -372,9 +455,10 @@ void testApp::getScreenCalibrationPoints(){
 
         for(int i =0; i < dsUsers.size(); i++){
 
-            if(dsUsers[i]->isPointing){
+            if(dsUsers[i]->isPointing && !dsUsers[i]->isSleeping){
                 selectedUser = i;
                 currentUserId = dsUsers[selectedUser]->id;
+                dsUsers[selectedUser]->isCalibrating =true;
                 countdown -= 1;
                 break;
             }
@@ -393,6 +477,9 @@ void testApp::getScreenCalibrationPoints(){
             countdown = 5;
             scCalTog->setValue(0,0);
             currentUserId = 0;
+            dsUsers[selectedUser]->isCalibrating = false;
+            scCalString = "";
+
 
         }
 
@@ -426,9 +513,17 @@ void testApp::getScreenCalibrationPoints(){
         scCalibStage += 1;
         scCalibStage = scCalibStage%4;
         if(scCalibStage == 0){
+            screenPosAuto(); //calculate screen points given it's size
             countdown = 5;
             scCalTog->setValue(0,0);
+            scXsl->setValue(screenCenter.x, 0);
+            scYsl->setValue(screenCenter.y, 0);
+            scZsl->setValue(screenCenter.z, 0);
+            scRotsl->setValue(screenRot,0);
             currentUserId = 0;
+            dsUsers[selectedUser]->isCalibrating = false;
+            scCalString = "";
+
         }else{countdown = 4;}
 
     }else if(countdown <= 0 ){
@@ -740,6 +835,31 @@ void testApp::keyPressed(int key){
         case '-':
         viewScale -= 0.01;
         if(viewScale < 1)viewScale = 1;
+        break;
+
+
+        case '[':
+        screenDims.x -= 1;
+        scWsl->setValue(screenDims.x, 0);
+		screenPosManual();
+        break;
+
+        case ']':
+        screenDims.x += 1;
+        scWsl->setValue(screenDims.x, 0);
+		screenPosManual();
+        break;
+
+        case '{':
+        screenDims.y += 1;
+        scWsl->setValue(screenDims.y, 0);
+		screenPosManual();
+        break;
+
+        case '}':
+        screenDims.y -= 1;
+        scWsl->setValue(screenDims.y, 0);
+		screenPosManual();
         break;
 	}
 

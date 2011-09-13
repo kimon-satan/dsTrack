@@ -69,9 +69,10 @@ class dsUser{
 	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
 	ofVec3f getUDir(){return u_dir;}
+	ofVec3f getUPoint(){return u_point;}
 
 	int id;
-	bool isSleeping, isScreen, isPointing;
+	bool isSleeping, isScreen, isPointing, isCalibrating;
 
 	private:
 

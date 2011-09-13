@@ -24,6 +24,7 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
     isSleeping = false;
 	isIntersect = false;
 	isScreen = true;
+	isCalibrating = false;
 
 }
 
@@ -95,8 +96,9 @@ void dsUser::updateFeatures(){
 	u_height.x = 0;
 	u_height.z = 0;
 
-	ofVec3f highestPoints[10] = {1000}; //ignore people shorter than 1m !
+	ofVec3f highestPoints[10];
 
+	for(int i = 0; i < 10; i++)highestPoints[i].y = rot_CoM_rW.y + i;
 
 	for(int i = 0; i < numCloudPoints; i++){
 
@@ -123,7 +125,7 @@ void dsUser::updateFeatures(){
 	}
 
 
-    if(highestPoints[0].y > 0){ //meaning at least 10 hps found
+    if(highestPoints[0].y > rot_CoM_rW.y){ //meaning at least 10 hps found
 
         //find mean highest point
         u_height.average(&highestPoints[0], 10);
@@ -205,7 +207,7 @@ void dsUser::updateScreenIntersections(){
 
     //test that it's in the right ball park
 
-    if(!focus_dir.align(u_dir,70)){
+    if(!focus_dir.align(u_dir,70) && !isCalibrating){
 
         isPointing = false;
         return;
@@ -258,7 +260,7 @@ void dsUser::updateSphereIntersections(){
 
     //test that it's in the right ball park
 
-    if(!focus_dir.align(u_dir,70)){
+    if(!focus_dir.align(u_dir,70) && !isCalibrating){
 
         isPointing = false;
         return;

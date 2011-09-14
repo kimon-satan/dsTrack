@@ -65,6 +65,12 @@ void dsUser::updateFeatures(){
 	rot_CoM_rW.set(CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
 	rot_CoM_rW.rotate(fRotAngle,floorPoint,fRotAxis);
 
+	if(rot_CoM_rW.y < floorPoint.y + 500){
+
+        isSleeping = true; //for accidental capturing of the floor
+        return;
+	}
+
 
 	int w = userGen->getWidth();
 	int h = userGen->getHeight();
@@ -231,10 +237,10 @@ void dsUser::updateScreenIntersections(){
 
 	//rotate to axis to simplify bounds problem
 
-    ofVec3f rotP = screenP.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
-	ofVec3f	rotQ = screenQ.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
+    ofVec3f rotP = screenP.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
+	ofVec3f	rotQ = screenQ.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
 
-    rotIntersect = intersection.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
+    rotIntersect = intersection.getRotated(-screenRot, screenCentre, ofVec3f(0,1,0));
 
 
 	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&

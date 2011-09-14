@@ -3,7 +3,7 @@
 
 #define USE_IR
 //
-#define USE_FILE
+//#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
@@ -36,6 +36,7 @@ public:
 
 	void	setupRecording(string _filename = "");
 	void	setupGUI();
+    void    updateValues();
 
     void    calculateScreenPlane();
     void    screenPosManual();

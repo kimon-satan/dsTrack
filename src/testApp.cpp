@@ -21,8 +21,6 @@ void testApp::setup() {
 
 	TTF.loadFont("verdana.ttf", 60, true, true);
 
-	filterFactor = 0.1f;
-	smoothFactor = 0.1f;
 	yRot = 140;
 	xRot = 0;
 	zTrans = - 5000;
@@ -56,13 +54,9 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-    for(int i = 0; i < 20; i++){dsUsers[i].setup(i, &userGen, &depthGen);}
     screenDims.set(4000,3000);
     screenCenter.set(0,2000);
-    screenPosManual();
-    calculateScreenPlane();
-
-	spherePos.set(0,1500,0);
+    spherePos.set(0,1500,0);
 	sphereRad = 750;
     scCalibStage = 0;
 	floorPlane.ptPoint.X = 0;
@@ -72,12 +66,18 @@ void testApp::setup() {
 	floorPlane.vNormal.Y = 0;
 	floorPlane.vNormal.Z = 0;
 
-	outputMode = 0;
+    outputMode = 0;
 
+    screenPosManual();
+    calculateScreenPlane();
+
+    setupGUI();
+
+    for(int i = 0; i < 20; i++){dsUsers[i].setup(i, &userGen, &depthGen);}
     thisUM.dsUsers = &dsUsers[0];
     thisUM.activeUserList = &activeUserList;
 
-	setupGUI();
+
 }
 
 void testApp::setupRecording(string _filename) {
@@ -108,7 +108,7 @@ void testApp::setupRecording(string _filename) {
 	userGen.setSmoothing(filterFactor);				// built in openni skeleton smoothing...
 	userGen.setUseMaskPixels(true);
 	userGen.setUseCloudPoints(true);
-	userGen.setMaxNumberOfUsers(10);					// use this to set dynamic max number of users (NB: that a hard upper limit is defined by MAX_NUMBER_USERS in ofxUserGenerator)
+	userGen.setMaxNumberOfUsers(8);					// use this to set dynamic max number of users (NB: that a hard upper limit is defined by MAX_NUMBER_USERS in ofxUserGenerator)
 	userGen.addUserListener(this);
 
 	//Context.toggleRegisterViewport();  //this fucks up realWorld proj
@@ -179,7 +179,7 @@ void testApp::setupGUI(){
 	scXsl = gui.addSlider("ScreenX", "SC_X", screenCenter.x , -5000, 5000, true);
 	scYsl = gui.addSlider("ScreenY", "SC_Y", screenCenter.y , -5000, 5000, true);
 	scZsl = gui.addSlider("ScreenZ", "SC_Z", screenCenter.z , -5000, 5000, true);
-	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", screenRot, -180, 180,true);
+	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", screenRot, -90, 90,true);
 
     gui.addLabel("Sphere Properties");
 
@@ -241,21 +241,27 @@ void testApp::eventsIn(guiCallbackData & data){
 	}else if(data.getXmlName() == "SC_X"){
 		screenCenter.x = data.getFloat(0);
 		screenPosManual();
+		updateValues();
 	}else if(data.getXmlName() == "SC_Y"){
 		screenCenter.y = data.getFloat(0);
 		screenPosManual();
+		updateValues();
 	}else if(data.getXmlName() == "SC_Z"){
 		screenCenter.z = data.getFloat(0);
 		screenPosManual();
+		updateValues();
     }else if(data.getXmlName() == "SC_W"){
 		screenDims.x = data.getFloat(0);
 		screenPosManual();
+		updateValues();
     }else if(data.getXmlName() == "SC_H"){
 		screenDims.y = data.getFloat(0);
 		screenPosManual();
+		updateValues();
     }else if(data.getXmlName() == "SC_ROT"){
 		screenRot = data.getFloat(0);
 		screenPosManual();
+		updateValues();
 	}else if(data.getXmlName() == "SP_Z"){
 		spherePos.z = data.getFloat(0);
 		for(int i = 0; i < 20; i++)dsUsers[i].setSphere(spherePos, sphereRad);
@@ -278,6 +284,16 @@ void testApp::eventsIn(guiCallbackData & data){
 
 }
 
+void testApp::updateValues(){
+
+    scRotsl->setValue(screenRot, 0);
+    scYsl->setValue(screenCenter.y, 0);
+    scXsl->setValue(screenCenter.x, 0);
+    scZsl->setValue(screenCenter.z, 0);
+    scWsl->setValue(screenDims.x, 0);
+    scHsl->setValue(screenDims.y, 0);
+
+}
 
 
 //--------------------------------------------------------------
@@ -345,6 +361,7 @@ void testApp::update(){
 
 void testApp::screenPosManual(){ //this is just for manual settings of screenPosition, size and orientation
 
+
     screenP.set(screenCenter.x - (screenDims.x/2), screenCenter.y - (screenDims.y/2), screenCenter.z);
     screenQ.set(screenCenter.x + (screenDims.x/2), screenCenter.y + (screenDims.y/2), screenCenter.z);
     screenR.set(screenCenter.x - (screenDims.x/2), screenCenter.y + (screenDims.y/2), screenCenter.z);
@@ -361,6 +378,8 @@ void testApp::screenPosManual(){ //this is just for manual settings of screenPos
 void testApp::screenPosAuto(){
 
   ofVec3f p;
+
+   // screenRot = 999;
 
     calVecs[0].normalize(); //are they normalized already ?
     calVecs[1].normalize();
@@ -434,7 +453,12 @@ void testApp::screenPosAuto(){
 
     calculateScreenPlane();
 
-    if(abs(screenRot) > 90){
+    if(screenRot > 90){
+
+        screenRot -= 180;
+        screenPosManual();
+
+    }else if(screenRot < 90){
 
         screenRot += 180;
         screenPosManual();
@@ -454,7 +478,9 @@ void testApp::calculateScreenPlane(){
 		screenD = dV.x + dV.y + dV.z;
 
 		// now get Rotation
-		screenRot = -screenNormal.angle(ofVec3f(0,0,1));
+		ofVec3f axis(0,0,1);
+		screenRot = axis.angle(screenNormal);
+		if(screenNormal.x < 0)screenRot *= -1; //direction correction
 
         //calculate point S
         screenS = screenP.getRotated(180,screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
@@ -767,6 +793,7 @@ void testApp::onLostUser(int id)
 	numUsers -= 1;
 
 
+
 	for(int i = 0; i < userSelector->vecDropList.size(); i++){ //erase the menu reference
 
 		if(ofToInt(userSelector->vecDropList[i]) == id){
@@ -776,7 +803,8 @@ void testApp::onLostUser(int id)
 		}
     }
 
-    for(int i = 0; i < 20; i ++){
+
+    for(int i = 0; i < activeUserList.size(); i ++){
 		if(activeUserList[i] == id){
 
 			activeUserList.erase(activeUserList.begin() + i);
@@ -862,13 +890,13 @@ void testApp::keyPressed(int key){
 
         case '{':
         screenDims.y += 1;
-        scWsl->setValue(screenDims.y, 0);
+        scHsl->setValue(screenDims.y, 0);
 		screenPosManual();
         break;
 
         case '}':
         screenDims.y -= 1;
-        scWsl->setValue(screenDims.y, 0);
+        scHsl->setValue(screenDims.y, 0);
 		screenPosManual();
         break;
 	}

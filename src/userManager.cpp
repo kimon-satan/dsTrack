@@ -5,7 +5,7 @@ userManager::userManager()
     //ctor
     for(int i = 0; i < 20; i ++)currentUserList[i] = 0;
     outputMode = 0;
-    thisMess.setup(HOST, PORT);
+    thisMess.setup(LOCAL_HOST, PORT);
     ofxOscMessage m;
     m.setAddress("/init");
     thisMess.sendMessage(m);
@@ -13,6 +13,9 @@ userManager::userManager()
 }
 
 void userManager::sendOutputMode(int t_out){
+
+        if(outputMode == 0 && t_out > 0){thisMess.setup(EX_HOST, PORT);}
+        if(outputMode > 0 && t_out == 0){thisMess.setup(LOCAL_HOST, PORT);}
 
         outputMode = t_out;
         ofxOscMessage m;
@@ -25,6 +28,7 @@ void userManager::sendOutputMode(int t_out){
 
 void userManager::manageUsers(){
 
+    if(outputMode == 0)return;
 
     //first find compliant users and see if they are new
     for(int  i = 0; i < activeUserList->size(); i++){
@@ -64,8 +68,6 @@ void userManager::manageUsers(){
     }
 
 
-    if(outputMode == 1){ //for test version send normalised coordinates for all users
-
          for(int j = 0; j < 20; j ++){
             if(currentUserList[j] > 0){
             int id = currentUserList[j];
@@ -73,7 +75,6 @@ void userManager::manageUsers(){
             sendPoint(j, t);
             }
          }
-    }
 
 }
 
@@ -103,6 +104,17 @@ void userManager::sendPoint(int userId, ofVec2f point){
     m.addIntArg(userId);
     m.addFloatArg(point.x);
     m.addFloatArg(point.y);
+
+    thisMess.sendMessage(m);
+
+}
+
+void userManager::sendCalibrationMessage(int stage, int count){
+
+    ofxOscMessage m;
+    m.setAddress("/calib");
+    m.addIntArg(stage);
+    m.addIntArg(count);
 
     thisMess.sendMessage(m);
 

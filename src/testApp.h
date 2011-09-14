@@ -3,6 +3,7 @@
 
 #define USE_IR
 //
+//
 //#define USE_FILE
 
 #include "ofxOpenNI.h"

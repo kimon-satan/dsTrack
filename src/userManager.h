@@ -5,7 +5,8 @@
 #include "ofMain.h"
 #include "dsUser.h"
 
-#define HOST "172.16.1.2"
+#define EX_HOST "172.16.1.2"
+#define LOCAL_HOST "localhost"
 #define PORT 12345
 
 class userManager
@@ -16,7 +17,7 @@ class userManager
 
         void manageUsers();
         void sendOutputMode(int t_out);
-
+        void sendCalibrationMessage(int stage, int count);
         dsUser * dsUsers;
         vector <int> * activeUserList;
 
@@ -26,6 +27,7 @@ class userManager
     void sendPoint(int userId, ofVec2f point);
     void sendNewUser(int i);
     void sendLostUser(int i);
+
 
     ofxOscSender thisMess;
     int outputMode;

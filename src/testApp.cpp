@@ -278,7 +278,7 @@ void testApp::eventsIn(guiCallbackData & data){
         scCalibStage = 1;
 	}else if(data.getXmlName() == "OUTPUT"){
         outputMode = data.getInt(0);
-        if(outputMode >0)thisUM.sendOutputMode(outputMode);
+        thisUM.sendOutputMode(outputMode);
 	}
 
 
@@ -330,8 +330,6 @@ void testApp::update(){
 
 	}
 
-
-
 	//try to get the floor pane
 
 	if(isFloor){
@@ -345,8 +343,6 @@ void testApp::update(){
 		correctAxis = vN.getCrossed(yRef);
 		kinectPos.set(0,0,0);
 		kinectPos.rotate(correctAngle, ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z), correctAxis);
-
-
 
 		for(int  i = 0; i < 20; i++){
 			dsUsers[i].setFloorPlane(ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z),
@@ -527,12 +523,14 @@ void testApp::getScreenCalibrationPoints(){
             dsUsers[currentUserId].isCalibrating = false;
             currentUserId = 0;
             scCalString = "";
+            thisUM.sendCalibrationMessage(0, 0);
         }
 
 
     }else if(ofGetElapsedTimeMillis() > msecs + 1000 && countdown > 0 && countdown < 5){ //normal routine
 
         msecs = ofGetElapsedTimeMillis();
+        thisUM.sendCalibrationMessage(scCalibStage,countdown);
 
         switch(scCalibStage){
 
@@ -569,6 +567,7 @@ void testApp::getScreenCalibrationPoints(){
             dsUsers[currentUserId].isCalibrating = false;
             currentUserId = 0;
             scCalString = "";
+            thisUM.sendCalibrationMessage(scCalibStage, 0);
 
         }else{countdown = 4;}
 
@@ -580,6 +579,7 @@ void testApp::getScreenCalibrationPoints(){
         }else{
          scCalString = "FAILED";
          scCalibStage = 10;
+         thisUM.sendCalibrationMessage(scCalibStage, 0);
          countdown = 3;
         }
 

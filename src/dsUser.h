@@ -37,9 +37,10 @@ class dsUser{
 
 	public:
 
-	dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen);
+	dsUser();
 	~dsUser();
 
+    void setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen);
 	void update();
 
 	void setFloorPlane(ofVec3f tPoint, ofVec3f tAxis, float tAngle);
@@ -56,7 +57,7 @@ class dsUser{
 	void setPointProp(float temp){pointProp = temp;}
 	void setEyeProp(float temp){eyeProp = temp;}
 	void setSternProp(float temp){sternProp = temp;}
-	void setScreen(float d, float rot, ofVec3f p, ofVec3f q, ofVec3f norm, ofVec3f centre){
+	void setScreen(float d, float rot, ofVec3f p, ofVec3f q, ofVec3f norm, ofVec3f centre, ofVec2f dims){
 
         screenD = d;
         screenRot = rot;
@@ -64,15 +65,17 @@ class dsUser{
         screenP = p;
         screenQ = q;
         screenCentre = centre;
+        screenDims = dims;
 
 	}
 	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
 
 	ofVec3f getUDir(){return u_dir;}
 	ofVec3f getUPoint(){return u_point;}
+	ofVec2f getScreenIntersect();
 
 	int id;
-	bool isSleeping, isScreen, isPointing, isCalibrating;
+	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect;
 
 	private:
 
@@ -103,12 +106,12 @@ class dsUser{
 
 	float screenD, screenRot;
 	ofVec3f screenP, screenQ, screenNormal, screenCentre;
+    ofVec2f screenDims;
 
 	float sphereRad;
 	ofVec3f spherePos;
 
-	ofVec3f intersection;
-	bool isIntersect;
+	ofVec3f intersection, rotIntersect;
 
 
 };

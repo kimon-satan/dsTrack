@@ -10,7 +10,11 @@
 
 #include "dsUser.h"
 
-dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen){
+dsUser::dsUser(){
+
+}
+
+void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen){
 
 	id = t_id;
 	userGen = t_userGen;
@@ -25,6 +29,7 @@ dsUser::dsUser(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_dep
 	isIntersect = false;
 	isScreen = true;
 	isCalibrating = false;
+
 
 }
 
@@ -229,7 +234,7 @@ void dsUser::updateScreenIntersections(){
     ofVec3f rotP = screenP.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
 	ofVec3f	rotQ = screenQ.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
 
-    ofVec3f rotIntersect = intersection.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
+    rotIntersect = intersection.getRotated(screenRot, screenCentre, ofVec3f(0,1,0));
 
 
 	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&
@@ -241,6 +246,15 @@ void dsUser::updateScreenIntersections(){
         isIntersect = false;
     }
 
+
+}
+
+ofVec2f dsUser::getScreenIntersect(){
+
+    ofVec2f i(rotIntersect.x - screenCentre.x, rotIntersect.y - screenCentre.y);
+    i /= screenDims;
+
+    return i;
 
 }
 

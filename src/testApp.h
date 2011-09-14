@@ -9,7 +9,7 @@
 #include "ofMain.h"
 #include "dsUser.h"
 #include "ofxControlPanel.h"
-#include "ofxOsc.h"
+#include "userManager.h"
 
 class testApp : public ofBaseApp, UserListener{
 
@@ -70,7 +70,10 @@ private:
 	ofxHardwareDriver	hardware;
 #endif
 
-	vector <dsUser *>		dsUsers;
+	dsUser  		        dsUsers[20];
+	vector<int>             activeUserList;
+	userManager             thisUM;
+
 	guiTypeTextDropDown * userSelector;
 
 	ofImage				allUserMasks, depthRangeMask;
@@ -102,6 +105,8 @@ private:
 
 	int scCalibStage;
 	string scCalString;
+
+    int outputMode;
 
     ofVec3f calVecs[3];
 

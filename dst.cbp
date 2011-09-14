@@ -81,6 +81,9 @@
 			<Add directory="../../../addons/ofxXmlSettings/src" />
 			<Add directory="../../../addons/ofxDirList/src" />
 			<Add directory="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src" />
+			<Add directory="../../../addons/ofxOsc/libs/oscpack/include/ip" />
+			<Add directory="../../../addons/ofxOsc/libs/oscpack/include/osc" />
+			<Add directory="../../../addons/ofxOsc/src" />
 		</Compiler>
 		<Linker>
 			<Add library="fmodex" />
@@ -102,6 +105,7 @@
 			<Add library="FLAC" />
 			<Add library="ogg" />
 			<Add library="OpenNI" />
+			<Add library="../../../addons/ofxOsc/libs/oscpack/lib/linux/liboscpack.a" />
 			<Add directory="$(OF_ROOT)/libs/freetype/lib/linux" />
 			<Add directory="$(OF_ROOT)/libs/rtAudio/lib/linux" />
 			<Add directory="$(OF_ROOT)/libs/fmodex/lib/linux" />
@@ -262,6 +266,16 @@
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxTrackedUser.h" />
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxUserGenerator.cpp" />
 		<Unit filename="../../../addons/ofxOpenNI/src/ofxUserGenerator.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOsc.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscArg.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscBundle.cpp" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscBundle.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscMessage.cpp" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscMessage.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscReceiver.cpp" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscReceiver.h" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscSender.cpp" />
+		<Unit filename="../../../addons/ofxOsc/src/ofxOscSender.h" />
 		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxml.cpp" />
 		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxml.h" />
 		<Unit filename="../../../addons/ofxXmlSettings/libs/tinyxmlerror.cpp" />
@@ -290,6 +304,12 @@
 			<Option virtualFolder="src/" />
 		</Unit>
 		<Unit filename="src/testApp.h">
+			<Option virtualFolder="src/" />
+		</Unit>
+		<Unit filename="src/userManager.cpp">
+			<Option virtualFolder="src/" />
+		</Unit>
+		<Unit filename="src/userManager.h">
 			<Option virtualFolder="src/" />
 		</Unit>
 		<Unit filename="../../../contribAddons/ofxControlPanel/src/ofxControlPanel/src/guiBaseObject.cpp" />

@@ -33,12 +33,12 @@ void testApp::setup() {
 	isScreen = true;
 	sternProp = 0.8;
 
-	selectedUser = 0;
+	currentUserId = 0;
 	numUsers = 0;
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "highAngle.oni";
+	fileName = "morePointing.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -56,7 +56,8 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-    screenDims.set(1200,900);
+    for(int i = 0; i < 20; i++){dsUsers[i].setup(i, &userGen, &depthGen);}
+    screenDims.set(4000,3000);
     screenCenter.set(0,2000);
     screenPosManual();
     calculateScreenPlane();
@@ -70,6 +71,11 @@ void testApp::setup() {
 	floorPlane.vNormal.X = 0;
 	floorPlane.vNormal.Y = 0;
 	floorPlane.vNormal.Z = 0;
+
+	outputMode = 0;
+
+    thisUM.dsUsers = &dsUsers[0];
+    thisUM.activeUserList = &activeUserList;
 
 	setupGUI();
 }
@@ -118,6 +124,7 @@ void testApp::setupGUI(){
 	gui.addPanel("Camera", 4, false);
 	gui.addPanel("User", 4, false);
 	gui.addPanel("Screen", 4, false);
+	gui.addPanel("Messaging", 4, false);
 
 	gui.setWhichPanel(0);
 	gui.setWhichColumn(0);
@@ -174,8 +181,6 @@ void testApp::setupGUI(){
 	scZsl = gui.addSlider("ScreenZ", "SC_Z", screenCenter.z , -5000, 5000, true);
 	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", screenRot, -180, 180,true);
 
-
-
     gui.addLabel("Sphere Properties");
 
     spTog = gui.addToggle("SphereOn", "SP_ON", false);
@@ -183,6 +188,17 @@ void testApp::setupGUI(){
 	gui.addSlider("SphereY", "SP_Y", spherePos.y , 0, 10000, false);
 	gui.addSlider("SphereZ", "SP_Z", spherePos.z , -10000, 5000, false);
     gui.addSlider("SphereRad", "SP_RAD", sphereRad , 100, 3500, false);
+
+
+    gui.setWhichPanel(3);
+
+    vector <string> modes;
+
+    modes.push_back("no output");
+    modes.push_back("testPoint");
+    modes.push_back("userManaged");
+
+    gui.addMultiToggle("Output Mode", "OUTPUT", 0, modes);
 
 	gui.setupEvents();
 	gui.enableEvents();
@@ -197,30 +213,30 @@ void testApp::eventsIn(guiCallbackData & data){
 		hardware.setTiltAngle(data.getFloat(0));
 	}else if(data.getXmlName() == "POINT_PROP"){
 		pointProp = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setPointProp(pointProp);
+		for(int i = 0; i < 20; i++)dsUsers[i].setPointProp(pointProp);
 	}else if(data.getXmlName() == "EYE_PROP"){
 		eyeProp = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setEyeProp(eyeProp);
+		for(int i = 0; i < 20; i++)dsUsers[i].setEyeProp(eyeProp);
     }else if(data.getXmlName() == "STERN_PROP"){
 		sternProp = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSternProp(sternProp);
+		for(int i = 0; i < 20; i++)dsUsers[i].setSternProp(sternProp);
 	}else if(data.getXmlName() == "FIND_FLOOR"){
 		isFloor = data.getInt(0);
 	}else if(data.getXmlName() == "SELECT_USER"){
 
-        selectedUser = data.getInt(0) - 1;
+        currentUserId = data.getInt(0) - 1;
 
-		if(selectedUser >= 0){currentUserId = dsUsers[selectedUser]->id;}else{
+		if(currentUserId >= 0){currentUserId = dsUsers[currentUserId].id;}else{
 		currentUserId = 0;
 		}
 
     }else if(data.getXmlName() == "SC_ON"){
 		isScreen = data.getInt(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->isScreen = isScreen;
+		for(int i = 0; i < 20; i++)dsUsers[i].isScreen = isScreen;
 		if(isScreen){spTog->setValue(0,0);}else{spTog->setValue(1,0);}
     }else if(data.getXmlName() == "SP_ON"){
 		isScreen = !data.getInt(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->isScreen = isScreen;
+		for(int i = 0; i < 20; i++)dsUsers[i].isScreen = isScreen;
 		if(!isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
 	}else if(data.getXmlName() == "SC_X"){
 		screenCenter.x = data.getFloat(0);
@@ -242,18 +258,21 @@ void testApp::eventsIn(guiCallbackData & data){
 		screenPosManual();
 	}else if(data.getXmlName() == "SP_Z"){
 		spherePos.z = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
+		for(int i = 0; i < 20; i++)dsUsers[i].setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_X"){
 		spherePos.x = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
+		for(int i = 0; i < 20; i++)dsUsers[i].setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_Y"){
 		spherePos.y = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
+		for(int i = 0; i < 20; i++)dsUsers[i].setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SP_RAD"){
 		sphereRad = data.getFloat(0);
-		for(int i = 0; i < dsUsers.size(); i++)dsUsers[i]->setSphere(spherePos, sphereRad);
+		for(int i = 0; i < 20; i++)dsUsers[i].setSphere(spherePos, sphereRad);
 	}else if(data.getXmlName() == "SC_CALIB"){
         scCalibStage = 1;
+	}else if(data.getXmlName() == "OUTPUT"){
+        outputMode = data.getInt(0);
+        if(outputMode >0)thisUM.sendOutputMode(outputMode);
 	}
 
 
@@ -283,15 +302,19 @@ void testApp::update(){
 
 	//update the users
 
-	for(int  i = 0; i < dsUsers.size(); i++)dsUsers[i]->update();
+	for(int  i = 0; i < 20; i++)dsUsers[i].update();
 
-	if(dsUsers.size() > 0 && currentUserId > 0){
+    thisUM.manageUsers();
 
-		CoM_rw_str = dsUsers[selectedUser]->getDataStr(COM_RW);
-		minZ_rw_str = dsUsers[selectedUser]->getDataStr(MINZ_RW);
-		minY_rw_str = dsUsers[selectedUser]->getDataStr(MINY_RW);
+	if(activeUserList.size() > 0 && currentUserId > 0){
+
+		CoM_rw_str = dsUsers[currentUserId].getDataStr(COM_RW);
+		minZ_rw_str = dsUsers[currentUserId].getDataStr(MINZ_RW);
+		minY_rw_str = dsUsers[currentUserId].getDataStr(MINY_RW);
 
 	}
+
+
 
 	//try to get the floor pane
 
@@ -309,8 +332,8 @@ void testApp::update(){
 
 
 
-		for(int  i = 0; i < dsUsers.size(); i++){
-			dsUsers[i]->setFloorPlane(ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z),
+		for(int  i = 0; i < 20; i++){
+			dsUsers[i].setFloorPlane(ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z),
 								  correctAxis, correctAngle);
 		}
 	}
@@ -349,10 +372,10 @@ void testApp::screenPosAuto(){
 
     while(!pFound){
 
-        ofVec3f p = (calVecs[0] * mul + dsUsers[selectedUser]->getUPoint());
+        ofVec3f p = (calVecs[0] * mul + dsUsers[currentUserId].getUPoint());
         ofVec3f r = p - ofVec3f(0,screenDims.y,0); //ray cast down y axis for size of screen
-        ofVec3f pb = dsUsers[selectedUser]->getUPoint(); //the user
-        ofVec3f pc = calVecs[2] * 10000 + dsUsers[selectedUser]->getUPoint(); //the ray to R
+        ofVec3f pb = dsUsers[currentUserId].getUPoint(); //the user
+        ofVec3f pc = calVecs[2] * 10000 + dsUsers[currentUserId].getUPoint(); //the ray to R
 
         float a = pb.distance(pc);
         float b = pc.distance(r);
@@ -383,8 +406,8 @@ void testApp::screenPosAuto(){
     dist = 10000;
     ofVec3f q = screenR; // a point on vec UR screenWidth from R
     q.x += screenDims.x;
-    ofVec3f qb = dsUsers[selectedUser]->getUPoint(); //the user
-    ofVec3f qc = calVecs[1] * 10000 + dsUsers[selectedUser]->getUPoint(); //the ray to Q
+    ofVec3f qb = dsUsers[currentUserId].getUPoint(); //the user
+    ofVec3f qc = calVecs[1] * 10000 + dsUsers[currentUserId].getUPoint(); //the ray to Q
 
     while(!qFound){
 
@@ -436,9 +459,9 @@ void testApp::calculateScreenPlane(){
         //calculate point S
         screenS = screenP.getRotated(180,screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
 
-        for(int i = 0; i < dsUsers.size(); i++){
+        for(int i = 0; i < 20; i++){
 
-            dsUsers[i]->setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter);
+            dsUsers[i].setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter, screenDims);
 
         }
 
@@ -453,12 +476,11 @@ void testApp::getScreenCalibrationPoints(){
 
     if(scCalibStage == 1 && countdown == 5){
 
-        for(int i =0; i < dsUsers.size(); i++){
+        for(int i =0; i < activeUserList.size(); i++){
 
-            if(dsUsers[i]->isPointing && !dsUsers[i]->isSleeping){
-                selectedUser = i;
-                currentUserId = dsUsers[selectedUser]->id;
-                dsUsers[selectedUser]->isCalibrating =true;
+            if(dsUsers[activeUserList[i]].isPointing && !dsUsers[activeUserList[i]].isSleeping){
+                currentUserId = activeUserList[i];
+                dsUsers[currentUserId].isCalibrating =true;
                 countdown -= 1;
                 break;
             }
@@ -476,11 +498,9 @@ void testApp::getScreenCalibrationPoints(){
             scCalibStage = 0;
             countdown = 5;
             scCalTog->setValue(0,0);
+            dsUsers[currentUserId].isCalibrating = false;
             currentUserId = 0;
-            dsUsers[selectedUser]->isCalibrating = false;
             scCalString = "";
-
-
         }
 
 
@@ -520,16 +540,16 @@ void testApp::getScreenCalibrationPoints(){
             scYsl->setValue(screenCenter.y, 0);
             scZsl->setValue(screenCenter.z, 0);
             scRotsl->setValue(screenRot,0);
+            dsUsers[currentUserId].isCalibrating = false;
             currentUserId = 0;
-            dsUsers[selectedUser]->isCalibrating = false;
             scCalString = "";
 
         }else{countdown = 4;}
 
     }else if(countdown <= 0 ){
 
-        if(dsUsers[selectedUser]->isPointing){
-        calVecTemps[-countdown] = dsUsers[selectedUser]->getUDir();
+        if(dsUsers[currentUserId].isPointing){
+        calVecTemps[-countdown] = dsUsers[currentUserId].getUDir();
         countdown -= 1;
         }else{
          scCalString = "FAILED";
@@ -562,11 +582,11 @@ void testApp::draw(){
 		imageGen.draw(0, 0, 640, 480); // first draw the image
         depthGen.draw(0,480, 640, 480);
 
-		if(dsUsers.size() > 0 && currentUserId > 0){
+		if(activeUserList.size() > 0 && currentUserId > 0){
 
 			ofEnableAlphaBlending();
-			ofSetColor(userColors[selectedUser].red,userColors[selectedUser].blue,userColors[selectedUser].green,50);
-			dsUsers[selectedUser]->drawMask(ofRectangle(0,0,640,480)); //then mask over
+			ofSetColor(userColors[currentUserId].red,userColors[currentUserId].blue,userColors[currentUserId].green,50);
+			dsUsers[currentUserId].drawMask(ofRectangle(0,0,640,480)); //then mask over
 			ofDisableAlphaBlending();
 
 
@@ -575,9 +595,10 @@ void testApp::draw(){
 			//draw masks and features for all users
 
             ofEnableAlphaBlending();
-            for(int i=0; i < numUsers; i++){
-			ofSetColor(userColors[dsUsers[i]->id].red,userColors[dsUsers[i]->id].blue,userColors[dsUsers[i]->id].green,50);
-			dsUsers[i]->drawMask(ofRectangle(0,0,640,480)); //then mask over
+            for(int i=0; i < activeUserList.size(); i++){
+            int id = activeUserList[i];
+                ofSetColor(userColors[id].red,userColors[id].blue,userColors[id].green,50);
+                dsUsers[id].drawMask(ofRectangle(0,0,640,480)); //then mask over
             }
 			ofDisableAlphaBlending();
 
@@ -678,8 +699,9 @@ void testApp::draw3Dscene(bool drawScreen){
 
         glPushMatrix();
 
-		for(int i =0; i < dsUsers.size(); i++){
-			dsUsers[i]->drawIntersect(viewScale);
+		for(int i =0; i < activeUserList.size(); i++){
+
+			dsUsers[activeUserList[i]].drawIntersect(viewScale);
 		}
         glPopMatrix();
 
@@ -698,24 +720,28 @@ void testApp::draw3Dscene(bool drawScreen){
 
         glPopMatrix();
 
-        for(int i =0; i < dsUsers.size(); i++){
-			dsUsers[i]->drawSphereIntersect(viewScale);
+        for(int i =0; i < activeUserList.size(); i++){
+			dsUsers[activeUserList[i]].drawSphereIntersect(viewScale);
 		}
 
 
 	}
-	if(dsUsers.size() > 0 && currentUserId > 0){
+	if(activeUserList.size() > 0 && currentUserId > 0){
 
 
-		if(isCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, true, userColors[selectedUser]);
-		if(isRawCloud)dsUsers[selectedUser]->drawPointCloud(viewScale, false);
-		dsUsers[selectedUser]->drawRWFeatures(viewScale, true);
+		if(isCloud)dsUsers[currentUserId].drawPointCloud(viewScale, true, userColors[currentUserId]);
+		if(isRawCloud)dsUsers[currentUserId].drawPointCloud(viewScale, false);
+		dsUsers[currentUserId].drawRWFeatures(viewScale, true);
 
 	}else{
 
-		for(int i = 0; i < dsUsers.size(); i++){
-		    if(isCloud)dsUsers[i]->drawPointCloud(viewScale, true, userColors[dsUsers[i]->id]);
-		    dsUsers[i]->drawRWFeatures(viewScale, true);
+		for(int i = 0; i < activeUserList.size(); i++){
+
+		    int id = activeUserList[i];
+
+		    if(isCloud)dsUsers[id].drawPointCloud(viewScale, true, userColors[id]);
+		    dsUsers[id].drawRWFeatures(viewScale, true);
+
 		}
 
 	}
@@ -727,27 +753,12 @@ void testApp::draw3Dscene(bool drawScreen){
 void testApp::onNewUser(int id)
 {
 	cout << "new dsUser added \n";
-    bool nAdded = false;
+    numUsers += 1;
+    dsUsers[id].isSleeping = false;
+	activeUserList.push_back(id);
 
-
-    if(!nAdded){  //okay so now add a new one
-
-	dsUser * newUser = new dsUser(id, &userGen, &depthGen);
-
-		newUser->setFloorPlane(ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z),
-								 correctAxis, correctAngle);
-
-	newUser->setEyeProp(eyeProp);
-	newUser->setPointProp(pointProp);
-	newUser->setSternProp(sternProp);
-	newUser->setScreen(screenD, screenRot, screenP, screenQ, screenNormal, screenCenter);
-	newUser->setSphere(spherePos, sphereRad);
-	newUser->isScreen = isScreen;
-
-	dsUsers.push_back(newUser);
-	numUsers += 1;
 	userSelector->vecDropList.push_back(ofToString(id, 0));
-    }
+
 }
 
 void testApp::onLostUser(int id)
@@ -765,11 +776,10 @@ void testApp::onLostUser(int id)
 		}
     }
 
-    for(int i = 0; i < dsUsers.size(); i ++){
-		if(dsUsers[i]->id == id){
+    for(int i = 0; i < 20; i ++){
+		if(activeUserList[i] == id){
 
-            delete dsUsers[i];
-			dsUsers.erase(dsUsers.begin() + i);
+			activeUserList.erase(activeUserList.begin() + i);
 
 		}
 	}

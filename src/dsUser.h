@@ -75,6 +75,7 @@ class dsUser{
 	ofVec2f getScreenIntersect();
 
 	int id;
+	float allowDownPoint;
 	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect;
 
 	private:

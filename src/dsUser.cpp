@@ -23,6 +23,7 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	pointProp = 0.25;
 	eyeProp = 0.9375;
 	sternProp = 0.8;
+	allowDownPoint = 0.5;
 	isPointing = false;
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
     isSleeping = false;
@@ -164,7 +165,7 @@ void dsUser::updateFeatures(){
 
     for(int i = 0; i < numCloudPoints; i ++){
 
-        if(rotCloudPoints[i].y > sternum.y ){
+        if(rotCloudPoints[i].y > sternum.y  - (pointThresh * allowDownPoint)){
 
             float dist = rotCloudPoints[i].distanceSquared(sternum);
             if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 2, 2)){

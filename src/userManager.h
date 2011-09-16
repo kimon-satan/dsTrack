@@ -18,6 +18,8 @@ class userManager
         void manageUsers();
         void sendOutputMode(int t_out);
         void sendCalibrationMessage(int stage, int count);
+        void sendIsMoving(int id, bool isMoving);
+
         dsUser * dsUsers;
         vector <int> * activeUserList;
 

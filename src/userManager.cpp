@@ -51,6 +51,8 @@ void userManager::manageUsers(){
                     if(currentUserList[j] == 0){
                         currentUserList[j] = t_id;
                         sendNewUser(j);
+                        sendIsMoving(j, dsUsers[t_id].isMoving);
+
                         break;}
                     } //find an empty id and assign
             }
@@ -58,23 +60,30 @@ void userManager::manageUsers(){
 
         }else{
 
-            for(int j = 0; j < 20; j ++)if(currentUserList[j] == t_id){
+            for(int j = 0; j < 20; j ++){
+
+            if(currentUserList[j] == t_id){
 
             currentUserList[j] = 0;
             sendLostUser(j);
+            break;
 
-            }; //remove the old users
+                } //remove the old users
+            }
         }
     }
 
 
-         for(int j = 0; j < 20; j ++){
-            if(currentUserList[j] > 0){
+    for(int j = 0; j < 20; j ++){
+        if(currentUserList[j] > 0){
             int id = currentUserList[j];
             ofVec2f t = dsUsers[id].getScreenIntersect();
             sendPoint(j, t);
+            if(dsUsers[id].sendMoveMessage){
+                sendIsMoving(j, dsUsers[id].isMoving);
             }
-         }
+        }
+    }
 
 }
 
@@ -116,6 +125,16 @@ void userManager::sendCalibrationMessage(int stage, int count){
     m.addIntArg(stage);
     m.addIntArg(count);
 
+    thisMess.sendMessage(m);
+
+}
+
+void userManager::sendIsMoving(int id, bool isMoving){
+
+    ofxOscMessage m;
+    m.setAddress("/isMoving");
+    m.addIntArg(id);
+    m.addIntArg((int)isMoving);
     thisMess.sendMessage(m);
 
 }

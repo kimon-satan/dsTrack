@@ -76,7 +76,7 @@ class dsUser{
 
 	int id;
 	float allowDownPoint;
-	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect;
+	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect, isMoving, sendMoveMessage;
 
 	private:
 
@@ -102,6 +102,11 @@ class dsUser{
 	float eyeProp, pointProp, sternProp, pointThresh;
 
 	ofVec3f rot_CoM_rW, u_height, u_point, eye_Pos, u_dir;
+
+	vector<ofVec3f> up_history;
+	vector<ofVec3f> uh_history;
+
+	bool upMoving, uhMoving, dummyIntersect;
 
 	XnPoint3D CoM_rW;
 

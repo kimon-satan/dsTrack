@@ -36,7 +36,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "morePointing.oni";
+	fileName = "StillAndMove.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -68,15 +68,19 @@ void testApp::setup() {
 
     outputMode = 0;
 
+    for(int i = 0; i < 20; i++){
+        dsUsers[i].setup(i, &userGen, &depthGen);
+            //need to set sphere props here
+    }
+
     screenPosManual();
-    calculateScreenPlane();
+    calculateScreenPlane(); //auto sets screen properties
+
 
     setupGUI();
 
-    for(int i = 0; i < 20; i++){dsUsers[i].setup(i, &userGen, &depthGen);}
     thisUM.dsUsers = &dsUsers[0];
     thisUM.activeUserList = &activeUserList;
-
 
 }
 
@@ -781,6 +785,7 @@ void testApp::onNewUser(int id)
 	cout << "new dsUser added \n";
     numUsers += 1;
     dsUsers[id].isSleeping = false;
+    dsUsers[id].isMoving = false;
 	activeUserList.push_back(id);
 
 	userSelector->vecDropList.push_back(ofToString(id, 0));
@@ -791,8 +796,6 @@ void testApp::onLostUser(int id)
 {
 	cout << "dsUser removed \n";
 	numUsers -= 1;
-
-
 
 	for(int i = 0; i < userSelector->vecDropList.size(); i++){ //erase the menu reference
 

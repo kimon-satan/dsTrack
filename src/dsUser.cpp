@@ -21,7 +21,7 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	depthGen = t_depthGen;
 	uhZx_Thresh = 100;
 	pointProp = 0.25;
-	eyeProp = 0.9375;
+	eyeProp = 0.95;
 	sternProp = 0.8;
 	allowDownPoint = 0.5;
 	isPointing = false;
@@ -30,7 +30,8 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	isIntersect = false;
 	isScreen = true;
 	isCalibrating = false;
-
+	sendMoveMessage = false;
+	isMoving = false;
 
 }
 
@@ -140,8 +141,21 @@ void dsUser::updateFeatures(){
     if(highestPoints[0].y > rot_CoM_rW.y){ //meaning at least 10 hps found
 
         //find mean highest point
-        u_height.average(&highestPoints[0], 10);
+        ofVec3f t_uh;
+        t_uh.average(&highestPoints[0], 10);
         hpFound = true;
+        uh_history.push_back(t_uh);
+        if(uh_history.size()  > 10){uh_history.erase(uh_history.begin());}
+        for(int i = 0; i < uh_history.size(); i++)u_height += uh_history[i];
+        u_height /= uh_history.size();
+
+        //determine moving or not
+        float dist = 0;
+        for(int i = 0; i < uh_history.size(); i++){
+            dist += u_height.distance(uh_history[i]);
+        }
+        dist /= uh_history.size();
+        (dist < 15) ? uhMoving = false : uhMoving = true;
 
     }else{
 
@@ -189,14 +203,52 @@ void dsUser::updateFeatures(){
 
 	if(distances[0] > 0){  //meaning there are atleast 10 points
 
-		u_point.average(&furthestPoints[0], 10);
+        ofVec3f t_up;
+		t_up.average(&furthestPoints[0], 10);
 		isPointing = true;
+        up_history.push_back(t_up);
+        if(up_history.size()  > 10){up_history.erase(up_history.begin());}
+        for(int i = 0; i < up_history.size(); i++)u_point += up_history[i];
+        u_point /= up_history.size();
+
+        //determine moving or not
+        float dist = 0;
+        for(int i = 0; i < up_history.size(); i++){
+            dist += u_point.distance(up_history[i]);
+        }
+        dist /= up_history.size();
+
+        (dist < 15)? upMoving = false : upMoving = true;
 
 		(isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
+
+        if(isIntersect){
+            if(!upMoving && !uhMoving){
+
+                if(isMoving){
+                    sendMoveMessage = true;
+                    isMoving = false;
+                }else{
+                    isMoving = false;
+                    sendMoveMessage = false;
+                }
+
+            }else{
+                if(!isMoving){
+                    sendMoveMessage = true;
+                    isMoving = true;
+                }else{
+                    isMoving =  true;
+                    sendMoveMessage = false;
+                }
+            }
+        }
+
 
 	}else{
 
 	    isPointing = false;
+	    up_history.clear();
     }
 
 
@@ -207,9 +259,9 @@ void dsUser::updateScreenIntersections(){
 
 	//calculate the pointing vector from eyeLine to end of finger
 
-	eye_Pos.x = rot_CoM_rW.x;
+	eye_Pos.x = u_height.x;
 	eye_Pos.y = (eyeProp * (u_height.y - floorPoint.y))+ floorPoint.y;
-	eye_Pos.z = rot_CoM_rW.z;
+	eye_Pos.z = u_height.z;
 
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();

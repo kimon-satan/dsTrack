@@ -81,10 +81,10 @@ class dsUser{
 
 	void drawMask(ofRectangle dims);
 
-	void drawRWFeatures(float scaling, bool pointBox = false);
-	void drawPointCloud(float mul, bool corrected = true, myCol col = myCol(100,100,100));
-	void drawIntersect(float mul);
-	void drawSphereIntersect(float mul);
+	void drawRWFeatures(bool pointBox = false);
+	void drawPointCloud(bool corrected = true, myCol col = myCol(100,100,100));
+	void drawIntersect();
+	void drawSphereIntersect();
 
 	string getDataStr(int type);
 
@@ -108,7 +108,7 @@ class dsUser{
 	ofxDepthGenerator * depthGen;
 	XnPoint3D  * cloudPoints;
 	vector <ofVec3f> rotCloudPoints;
-    environment * thisEnviron;
+    environment * env;
 
     int numCloudPoints;
 	bool  hpFound;

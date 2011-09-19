@@ -19,7 +19,7 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	id = t_id;
 	userGen = t_userGen;
 	depthGen = t_depthGen;
-	thisEnviron = t_env;
+	env = t_env;
 
 	isPointing = false;
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
@@ -65,9 +65,9 @@ void dsUser::updateFeatures(){
 	}
 
 	rot_CoM_rW.set(CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
-	rot_CoM_rW.rotate(thisEnviron->fRotAngle,thisEnviron->floorPoint,thisEnviron->fRotAxis);
+	rot_CoM_rW.rotate(env->fRotAngle,env->floorPoint,env->fRotAxis);
 
-	if(rot_CoM_rW.y < thisEnviron->floorPoint.y + 500){
+	if(rot_CoM_rW.y < env->floorPoint.y + 500){
 
         isSleeping = true; //for accidental capturing of the floor
         return;
@@ -97,7 +97,7 @@ void dsUser::updateFeatures(){
 	for(int i = 0; i < numCloudPoints; i++){ //correct rotation of points
 
 		ofVec3f temp(cloudPoints[i].X,cloudPoints[i].Y,cloudPoints[i].Z);
-		temp.rotate(thisEnviron->fRotAngle, thisEnviron->floorPoint, thisEnviron->fRotAxis);
+		temp.rotate(env->fRotAngle, env->floorPoint, env->fRotAxis);
 
 		rotCloudPoints.push_back(temp);
 
@@ -116,10 +116,10 @@ void dsUser::updateFeatures(){
 	for(int i = 0; i < numCloudPoints; i++){
 
 		if(rotCloudPoints[i].y > highestPoints[0].y &&		//only bother if the point is a contender for highest
-		   rotCloudPoints[i].z < rot_CoM_rW.z + thisEnviron->uhZx_Thresh &&
-		   rotCloudPoints[i].z > rot_CoM_rW.z - thisEnviron->uhZx_Thresh &&
-		   rotCloudPoints[i].x < rot_CoM_rW.x + thisEnviron->uhZx_Thresh &&
-		   rotCloudPoints[i].x > rot_CoM_rW.x - thisEnviron->uhZx_Thresh
+		   rotCloudPoints[i].z < rot_CoM_rW.z + env->uhZx_Thresh &&
+		   rotCloudPoints[i].z > rot_CoM_rW.z - env->uhZx_Thresh &&
+		   rotCloudPoints[i].x < rot_CoM_rW.x + env->uhZx_Thresh &&
+		   rotCloudPoints[i].x > rot_CoM_rW.x - env->uhZx_Thresh
 		   ){
 
 			for(int j = 9; j > -1; j --){ //go through the list highest to lowest
@@ -155,7 +155,7 @@ void dsUser::updateFeatures(){
             dist += u_height.distance(uh_history[i]);
         }
         dist /= uh_history.size();
-        (dist < thisEnviron->moveThresh) ? uhMoving = false : uhMoving = true;
+        (dist < env->moveThresh) ? uhMoving = false : uhMoving = true;
 
     }else{
 
@@ -165,10 +165,10 @@ void dsUser::updateFeatures(){
     }
 	//work out thresholds and body parts
 
-	pointThresh = thisEnviron->pointProp * (u_height.y - thisEnviron->floorPoint.y); //gives actual height of User
+	pointThresh = env->pointProp * (u_height.y - env->floorPoint.y); //gives actual height of User
 
-	float sh = (u_height.y - thisEnviron->floorPoint.y) * thisEnviron->sternProp;
-	sternum.set(rot_CoM_rW.x, sh + thisEnviron->floorPoint.y, rot_CoM_rW.z);
+	float sh = (u_height.y - env->floorPoint.y) * env->sternProp;
+	sternum.set(rot_CoM_rW.x, sh + env->floorPoint.y, rot_CoM_rW.z);
 
 	//now test the cloudPoints to see if there is nearest pixel inside
 
@@ -179,7 +179,7 @@ void dsUser::updateFeatures(){
 
     for(int i = 0; i < numCloudPoints; i ++){
 
-        if(rotCloudPoints[i].y > sternum.y  - (pointThresh * thisEnviron->allowDownPoint)){
+        if(rotCloudPoints[i].y > sternum.y  - (pointThresh * env->allowDownPoint)){
 
             float dist = rotCloudPoints[i].distanceSquared(sternum);
             if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 2, 2)){
@@ -219,7 +219,7 @@ void dsUser::updateFeatures(){
 
         dist /= up_history.size();
 
-        (dist < thisEnviron->moveThresh)? upMoving = false : upMoving = true;
+        (dist < env->moveThresh)? upMoving = false : upMoving = true;
 
 		(isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
 
@@ -277,13 +277,13 @@ void dsUser::updateScreenIntersections(){
 	//calculate the pointing vector from eyeLine to end of finger
 
 	eye_Pos.x = u_height.x;
-	eye_Pos.y = (thisEnviron->eyeProp * (u_height.y - thisEnviron->floorPoint.y))+ thisEnviron->floorPoint.y;
+	eye_Pos.y = (env->eyeProp * (u_height.y - env->floorPoint.y))+ env->floorPoint.y;
 	eye_Pos.z = u_height.z;
 
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();
 
-	ofVec3f focus_dir = ofVec3f(thisEnviron->screenCenter.x,thisEnviron->screenCenter.y,thisEnviron->screenCenter.z) - u_point;
+	ofVec3f focus_dir = ofVec3f(env->screenCenter.x,env->screenCenter.y,env->screenCenter.z) - u_point;
 	focus_dir.normalize();
 
     //test that it's in the right ball park
@@ -296,8 +296,8 @@ void dsUser::updateScreenIntersections(){
 
 	// now calculate the intersection with the screen
 
-    float t = thisEnviron->screenD - (thisEnviron->screenNormal.x * eye_Pos.x + thisEnviron->screenNormal.y * eye_Pos.y + thisEnviron->screenNormal.z * eye_Pos.z);
-		t /= (thisEnviron->screenNormal.x * u_dir.x + thisEnviron->screenNormal.y * u_dir.y + thisEnviron->screenNormal.z * u_dir.z);
+    float t = env->screenD - (env->screenNormal.x * eye_Pos.x + env->screenNormal.y * eye_Pos.y + env->screenNormal.z * eye_Pos.z);
+		t /= (env->screenNormal.x * u_dir.x + env->screenNormal.y * u_dir.y + env->screenNormal.z * u_dir.z);
 
 		intersection.set(
 						 eye_Pos.x + u_dir.x * t,
@@ -307,13 +307,13 @@ void dsUser::updateScreenIntersections(){
 
 	//rotate to axis to simplify bounds problem
 
-    ofVec3f rotP = thisEnviron->screenP.getRotated(-thisEnviron->screenRot, thisEnviron->screenCenter, ofVec3f(0,1,0));
-	ofVec3f	rotQ = thisEnviron->screenQ.getRotated(-thisEnviron->screenRot, thisEnviron->screenCenter, ofVec3f(0,1,0));
+    ofVec3f rotP = env->screenP.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
+	ofVec3f	rotQ = env->screenQ.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
 
-	ofVec2f bufP(thisEnviron->screenCenter.x - (thisEnviron->screenDims.x * thisEnviron->screenBuffer.x/2), thisEnviron->screenCenter.y - (thisEnviron->screenDims.y * thisEnviron->screenBuffer.y/2));
-	ofVec2f bufQ(thisEnviron->screenCenter.x + (thisEnviron->screenDims.x * thisEnviron->screenBuffer.x/2), thisEnviron->screenCenter.y + (thisEnviron->screenDims.y * thisEnviron->screenBuffer.y/2));
+	ofVec2f bufP(env->screenCenter.x - (env->screenDims.x * env->screenBuffer.x/2), env->screenCenter.y - (env->screenDims.y * env->screenBuffer.y/2));
+	ofVec2f bufQ(env->screenCenter.x + (env->screenDims.x * env->screenBuffer.x/2), env->screenCenter.y + (env->screenDims.y * env->screenBuffer.y/2));
 
-    rotIntersect = intersection.getRotated(-thisEnviron->screenRot, thisEnviron->screenCenter, ofVec3f(0,1,0));
+    rotIntersect = intersection.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
 
 	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&
         rotIntersect.y > rotP.y && rotIntersect.y < rotQ.y){
@@ -353,8 +353,8 @@ void dsUser::updateScreenIntersections(){
 
 ofVec2f dsUser::getScreenIntersect(){
 
-    ofVec2f i(rotIntersect.x - thisEnviron->screenCenter.x, rotIntersect.y - thisEnviron->screenCenter.y);
-    i /= thisEnviron->screenDims;
+    ofVec2f i(rotIntersect.x - env->screenCenter.x, rotIntersect.y - env->screenCenter.y);
+    i /= env->screenDims;
 
     return i;
 
@@ -367,13 +367,13 @@ void dsUser::updateSphereIntersections(){
     //calculate the pointing vector from eyeLine to end of finger
 
 	eye_Pos.x = rot_CoM_rW.x;
-	eye_Pos.y = (thisEnviron->eyeProp * (u_height.y - thisEnviron->floorPoint.y))+ thisEnviron->floorPoint.y;
+	eye_Pos.y = (env->eyeProp * (u_height.y - env->floorPoint.y))+ env->floorPoint.y;
 	eye_Pos.z = rot_CoM_rW.z;
 
 	u_dir = u_point - eye_Pos;
 	u_dir.normalize();
 
-	ofVec3f focus_dir = thisEnviron->spherePos - u_point;
+	ofVec3f focus_dir = env->spherePos - u_point;
 	focus_dir.normalize();
 
     //test that it's in the right ball park
@@ -387,7 +387,7 @@ void dsUser::updateSphereIntersections(){
 
     // now calculate another point beyond the sphere
 
-	float t = thisEnviron->spherePos.z - thisEnviron->sphereRad + eye_Pos.z/u_dir.z;
+	float t = env->spherePos.z - env->sphereRad + eye_Pos.z/u_dir.z;
 
 	ofVec3f p2(eye_Pos.x - u_dir.x * t,
               eye_Pos.y - u_dir.y * t,
@@ -396,11 +396,11 @@ void dsUser::updateSphereIntersections(){
     //create a quadratic with the sphere
 
     double a = pow((p2.x - u_point.x),2) + pow((p2.y - u_point.y),2) + pow((p2.z - u_point.z),2);
-    double b = 2 *((p2.x-u_point.x) * (u_point.x - thisEnviron->spherePos.x)
-               + (p2.y-u_point.y) * (u_point.y - thisEnviron->spherePos.y)
-                + (p2.z-u_point.z) * (u_point.z - thisEnviron->spherePos.z));
+    double b = 2 *((p2.x-u_point.x) * (u_point.x - env->spherePos.x)
+               + (p2.y-u_point.y) * (u_point.y - env->spherePos.y)
+                + (p2.z-u_point.z) * (u_point.z - env->spherePos.z));
 
-    double c = pow((u_point.x-thisEnviron->spherePos.x),2) + pow((u_point.y-thisEnviron->spherePos.y),2) + pow((u_point.z-thisEnviron->spherePos.z),2) - pow(thisEnviron->sphereRad,2);
+    double c = pow((u_point.x-env->spherePos.x),2) + pow((u_point.y-env->spherePos.y),2) + pow((u_point.z-env->spherePos.z),2) - pow(env->sphereRad,2);
 
     //now solve it
 
@@ -442,7 +442,7 @@ void dsUser::drawMask(ofRectangle dims){
 }
 
 
-void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
+void dsUser::drawPointCloud(bool corrected, myCol col) {
 
     if(!isSleeping){
 	glPushMatrix();
@@ -454,11 +454,11 @@ void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
 
 			if(!corrected){
 			glColor4ub(150, 150, 150, 255);
-			glVertex3f(cloudPoints[i].X * mul, -(cloudPoints[i].Y - thisEnviron->floorPoint.y) * mul, -cloudPoints[i].Z * mul);
+			glVertex3f(cloudPoints[i].X * env->viewScale, -(cloudPoints[i].Y - env->floorPoint.y) * env->viewScale, -cloudPoints[i].Z * env->viewScale);
 			}else{
 
 			glColor4ub(col.red, col.blue, col.green, 255);
-			glVertex3f(rotCloudPoints[i].x * mul, -(rotCloudPoints[i].y - thisEnviron->floorPoint.y) * mul, -rotCloudPoints[i].z * mul);
+			glVertex3f(rotCloudPoints[i].x * env->viewScale, -(rotCloudPoints[i].y - env->floorPoint.y) * env->viewScale, -rotCloudPoints[i].z * env->viewScale);
 			}
 
 		}
@@ -473,37 +473,47 @@ void dsUser::drawPointCloud(float mul ,bool corrected, myCol col) {
 }
 
 
-void dsUser::drawRWFeatures(float scaling, bool pointBox){
+void dsUser::drawRWFeatures(bool pointBox){
 
     if(!isSleeping){
         ofNoFill();
 
         if(isPointing){
         glPushMatrix();
-        glTranslatef(eye_Pos.x * scaling, -(eye_Pos.y - thisEnviron->floorPoint.y) * scaling, -eye_Pos.z * scaling);
+        glTranslatef(eye_Pos.x * env->viewScale, -(eye_Pos.y - env->floorPoint.y) * env->viewScale, -eye_Pos.z * env->viewScale);
         ofSphere(0, 0, 0, 50);
         glPopMatrix();
 
             isIntersect ? ofSetColor(0,255,0) : ofSetColor(255,0,0);
 
-            ofLine(u_point.x * scaling, -(u_point.y - thisEnviron->floorPoint.y)* scaling, -u_point.z * scaling,
-                   intersection.x * scaling, -(intersection.y - thisEnviron->floorPoint.y)* scaling, -intersection.z * scaling);
+            ofLine(u_point.x * env->viewScale, -(u_point.y - env->floorPoint.y)* env->viewScale, -u_point.z * env->viewScale,
+                   intersection.x * env->viewScale, -(intersection.y - env->floorPoint.y)* env->viewScale, -intersection.z * env->viewScale);
         }
 
         if(hpFound){
 
         glPushMatrix();
         ofFill();
-        glTranslatef(u_height.x * scaling, -(u_height.y - thisEnviron->floorPoint.y) * scaling, -u_height.z * scaling);
+        glTranslatef(u_height.x * env->viewScale, -(u_height.y - env->floorPoint.y) * env->viewScale, -u_height.z * env->viewScale);
         ofSetColor(238, 130, 238);
         ofBox(0, 0, 0, 100);
         glPopMatrix();
 
         glPushMatrix();
         ofNoFill();
-        glTranslatef(sternum.x * scaling, -(sternum.y - thisEnviron->floorPoint.y) * scaling, -sternum.z * scaling);
+        glTranslatef(sternum.x * env->viewScale, -(sternum.y - env->floorPoint.y) * env->viewScale, -sternum.z * env->viewScale);
         ofSetColor(100, 100, 100, 100);
-        ofSphere(0, 0, 0, pointThresh * scaling);
+        ofSphere(0, 0, 0, pointThresh * env->viewScale);
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(sternum.x  * env->viewScale, -(sternum.y - pointThresh - env->floorPoint.y) * env->viewScale, -sternum.z * env->viewScale);
+        glTranslatef(0, -pointThresh * 2 * env->allowDownPoint * env->viewScale,0);
+        glRotatef(90,1,0,0);
+        ofSetColor(255, 255,255);
+        ofSetRectMode(OF_RECTMODE_CENTER);
+        ofRect(0,0, pointThresh * 2 * env->viewScale,pointThresh * 1.5 * env->viewScale);
+        ofSetRectMode(OF_RECTMODE_CORNER);
         glPopMatrix();
 
         }
@@ -511,7 +521,7 @@ void dsUser::drawRWFeatures(float scaling, bool pointBox){
 
         glPushMatrix();
         ofNoFill();
-        glTranslatef(rot_CoM_rW.x * scaling, -(rot_CoM_rW.y - thisEnviron->floorPoint.y) * scaling, -rot_CoM_rW.z * scaling);
+        glTranslatef(rot_CoM_rW.x * env->viewScale, -(rot_CoM_rW.y - env->floorPoint.y) * env->viewScale, -rot_CoM_rW.z * env->viewScale);
         ofSetColor(0, 0, 255);
         ofSphere(0, 0, 0, 100);
         glPopMatrix();
@@ -520,7 +530,7 @@ void dsUser::drawRWFeatures(float scaling, bool pointBox){
     }
 }
 
-void dsUser::drawIntersect(float mul){
+void dsUser::drawIntersect(){
 
 	if(isPointing){
         ofFill();
@@ -533,20 +543,20 @@ void dsUser::drawIntersect(float mul){
         }
 
         if(isMoving){
-        ofSphere(intersection.x * mul, -(intersection.y - thisEnviron->floorPoint.y) * mul, -intersection.z * mul, 150);
+        ofSphere(intersection.x * env->viewScale, -(intersection.y - env->floorPoint.y) * env->viewScale, -intersection.z * env->viewScale, 150);
         }else{
-        ofBox(intersection.x * mul, -(intersection.y - thisEnviron->floorPoint.y) * mul, -intersection.z * mul, 150);
+        ofBox(intersection.x * env->viewScale, -(intersection.y - env->floorPoint.y) * env->viewScale, -intersection.z * env->viewScale, 150);
         }
 	}
 
 }
 
-void dsUser::drawSphereIntersect(float mul){
+void dsUser::drawSphereIntersect(){
 
 	if(isPointing){
         ofFill();
         (isIntersect) ? ofSetColor(0, 255, 0): ofSetColor(255,0,0);
-        ofBox(intersection.x * mul, -(intersection.y - thisEnviron->floorPoint.y) * mul, -intersection.z * mul, 150);
+        ofBox(intersection.x * env->viewScale, -(intersection.y - env->floorPoint.y) * env->viewScale, -intersection.z * env->viewScale, 150);
 	}
 
 }

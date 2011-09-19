@@ -74,7 +74,7 @@ private:
 	dsUser  		        dsUsers[20];
 	vector<int>             activeUserList;
 	userManager             thisUM;
-    environment             thisEnviron;
+    environment             env;
 
 	guiTypeTextDropDown * userSelector;
 

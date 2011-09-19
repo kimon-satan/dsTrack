@@ -49,10 +49,10 @@ void testApp::setup() {
     userColors[8] = myCol(100,100,100);
     userColors[9] = myCol(100,100,100);
 
-    thisEnviron.screenDims.set(4000,3000);
-    thisEnviron.screenBuffer.set(1.5,1.5);
-    thisEnviron.screenCenter.set(0,2000);
-    thisEnviron.spherePos.set(0,1500,0);
+    env.screenDims.set(4000,3000);
+    env.screenBuffer.set(1.5,1.5);
+    env.screenCenter.set(0,2000);
+    env.spherePos.set(0,1500,0);
 
     scCalibStage = 0;
 
@@ -66,7 +66,7 @@ void testApp::setup() {
     outputMode = 0;
 
     for(int i = 0; i < 20; i++){
-        dsUsers[i].setup(i, &userGen, &depthGen, &thisEnviron);
+        dsUsers[i].setup(i, &userGen, &depthGen, &env);
     }
 
     screenPosManual();
@@ -155,18 +155,21 @@ void testApp::setupGUI(){
 	vector <guiVariablePointer> f_vars;
 
 	f_vars.push_back( guiVariablePointer("floorPoint.y", &floorPlane.ptPoint.Y, GUI_VAR_FLOAT) );
-	f_vars.push_back( guiVariablePointer("correctionAngle", &correctAngle, GUI_VAR_FLOAT) );
-	f_vars.push_back( guiVariablePointer("correctAxis.x", &correctAxis.x, GUI_VAR_FLOAT) );
-	f_vars.push_back( guiVariablePointer("correctAxis.y", &correctAxis.y, GUI_VAR_FLOAT) );
-	f_vars.push_back( guiVariablePointer("correctAxis.z", &correctAxis.z, GUI_VAR_FLOAT) );
+	f_vars.push_back( guiVariablePointer("correctionAngle", &env.fRotAngle, GUI_VAR_FLOAT) );
+	f_vars.push_back( guiVariablePointer("correctAxis.x", &env.fRotAxis.x, GUI_VAR_FLOAT) );
+	f_vars.push_back( guiVariablePointer("correctAxis.y", &env.fRotAxis.y, GUI_VAR_FLOAT) );
+	f_vars.push_back( guiVariablePointer("correctAxis.z", &env.fRotAxis.z, GUI_VAR_FLOAT) );
 
 	gui.addVariableLister("Floor Data", f_vars);
 
 	gui.addToggle("find floor", "FIND_FLOOR", isFloor);
 
-	gui.addSlider("pointTestProp", "POINT_PROP", thisEnviron.pointProp, 0.01, 1.0, false);
-	gui.addSlider("eyeProp", "EYE_PROP", thisEnviron.eyeProp, 0.01, 1.0, false);
-	gui.addSlider("sternProp", "STERN_PROP", thisEnviron.sternProp, 0.01, 1.0, false);
+	gui.addSlider("pointTestProp", "POINT_PROP", env.pointProp, 0.01, 1.0, false);
+	gui.addSlider("hp_zxThresh", "ZX_THRESH", env.uhZx_Thresh, 10, 200, false);
+	gui.addSlider("eyeProp", "EYE_PROP", env.eyeProp, 0.01, 1.0, false);
+	gui.addSlider("sternProp", "STERN_PROP", env.sternProp, 0.01, 1.0, false);
+	gui.addSlider("allowDownPoint", "ALLOW_DOWN", env.allowDownPoint, 0.01, 1.0, false);
+	gui.addSlider("moveThresh", "MOVE_THRESH", env.moveThresh, 1, 50, false);
 
 	gui.setWhichPanel(2);
 
@@ -174,20 +177,23 @@ void testApp::setupGUI(){
 
     scTog = gui.addToggle("ScreenOn", "SC_ON", true);
     scCalTog = gui.addToggle("Begin Calibrate", "SC_CALIB", false);
-	scWsl = gui.addSlider("ScreenW", "SC_W", thisEnviron.screenDims.x , 500, 10000, true);
-	scHsl = gui.addSlider("ScreenH", "SC_H", thisEnviron.screenDims.y , 500, 10000, true);
-	scXsl = gui.addSlider("ScreenX", "SC_X", thisEnviron.screenCenter.x , -5000, 5000, true);
-	scYsl = gui.addSlider("ScreenY", "SC_Y", thisEnviron.screenCenter.y , -5000, 5000, true);
-	scZsl = gui.addSlider("ScreenZ", "SC_Z", thisEnviron.screenCenter.z , -5000, 5000, true);
-	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", thisEnviron.screenRot, -90, 90,true);
+	scWsl = gui.addSlider("ScreenW", "SC_W", env.screenDims.x , 500, 10000, true);
+	scHsl = gui.addSlider("ScreenH", "SC_H", env.screenDims.y , 500, 10000, true);
+	scXsl = gui.addSlider("ScreenX", "SC_X", env.screenCenter.x , -5000, 5000, true);
+	scYsl = gui.addSlider("ScreenY", "SC_Y", env.screenCenter.y , -5000, 5000, true);
+	scZsl = gui.addSlider("ScreenZ", "SC_Z", env.screenCenter.z , -5000, 5000, true);
+	scRotsl = gui.addSlider("ScreenRot", "SC_ROT", env.screenRot, -90, 90,true);
+
+	gui.addSlider("screenBufX", "BUF_X", env.screenBuffer.x, 1.0, 2.0, false);
+	gui.addSlider("screenBufY", "BUF_Y", env.screenBuffer.y, 1.0, 2.0, false);
 
     gui.addLabel("Sphere Properties");
 
     spTog = gui.addToggle("SphereOn", "SP_ON", false);
-    gui.addSlider("SphereX", "SP_X", thisEnviron.spherePos.x , -10000, 10000, false);
-	gui.addSlider("SphereY", "SP_Y", thisEnviron.spherePos.y , 0, 10000, false);
-	gui.addSlider("SphereZ", "SP_Z", thisEnviron.spherePos.z , -10000, 5000, false);
-    gui.addSlider("SphereRad", "SP_RAD", thisEnviron.sphereRad , 100, 3500, false);
+    gui.addSlider("SphereX", "SP_X", env.spherePos.x , -10000, 10000, false);
+	gui.addSlider("SphereY", "SP_Y", env.spherePos.y , 0, 10000, false);
+	gui.addSlider("SphereZ", "SP_Z", env.spherePos.z , -10000, 5000, false);
+    gui.addSlider("SphereRad", "SP_RAD", env.sphereRad , 100, 3500, false);
 
 
     gui.setWhichPanel(3);
@@ -212,11 +218,13 @@ void testApp::eventsIn(guiCallbackData & data){
 	if(data.getXmlName() == "TILT"){
 		hardware.setTiltAngle(data.getFloat(0));
 	}else if(data.getXmlName() == "POINT_PROP"){
-		thisEnviron.pointProp = data.getFloat(0);
+		env.pointProp = data.getFloat(0);
 	}else if(data.getXmlName() == "EYE_PROP"){
-		thisEnviron.eyeProp = data.getFloat(0);
+		env.eyeProp = data.getFloat(0);
     }else if(data.getXmlName() == "STERN_PROP"){
-		thisEnviron.sternProp = data.getFloat(0);
+		env.sternProp = data.getFloat(0);
+    }else if(data.getXmlName() == "ALLOW_DOWN"){
+		env.allowDownPoint = data.getFloat(0);
 	}else if(data.getXmlName() == "FIND_FLOOR"){
 		isFloor = data.getInt(0);
 	}else if(data.getXmlName() == "SELECT_USER"){
@@ -228,43 +236,43 @@ void testApp::eventsIn(guiCallbackData & data){
 		}
 
     }else if(data.getXmlName() == "SC_ON"){
-		thisEnviron.isScreen = data.getInt(0);
-		if(thisEnviron.isScreen){spTog->setValue(0,0);}else{spTog->setValue(1,0);}
+		env.isScreen = data.getInt(0);
+		if(env.isScreen){spTog->setValue(0,0);}else{spTog->setValue(1,0);}
     }else if(data.getXmlName() == "SP_ON"){
-		thisEnviron.isScreen = !data.getInt(0);
-		if(!thisEnviron.isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
+		env.isScreen = !data.getInt(0);
+		if(!env.isScreen){scTog->setValue(0,0);}else{scTog->setValue(1,0); }
 	}else if(data.getXmlName() == "SC_X"){
-		thisEnviron.screenCenter.x = data.getFloat(0);
+		env.screenCenter.x = data.getFloat(0);
 		screenPosManual();
 		updateValues();
 	}else if(data.getXmlName() == "SC_Y"){
-		thisEnviron.screenCenter.y = data.getFloat(0);
+		env.screenCenter.y = data.getFloat(0);
 		screenPosManual();
 		updateValues();
 	}else if(data.getXmlName() == "SC_Z"){
-		thisEnviron.screenCenter.z = data.getFloat(0);
+		env.screenCenter.z = data.getFloat(0);
 		screenPosManual();
 		updateValues();
     }else if(data.getXmlName() == "SC_W"){
-		thisEnviron.screenDims.x = data.getFloat(0);
+		env.screenDims.x = data.getFloat(0);
 		screenPosManual();
 		updateValues();
     }else if(data.getXmlName() == "SC_H"){
-		thisEnviron.screenDims.y = data.getFloat(0);
+		env.screenDims.y = data.getFloat(0);
 		screenPosManual();
 		updateValues();
     }else if(data.getXmlName() == "SC_ROT"){
-		thisEnviron.screenRot = data.getFloat(0);
+		env.screenRot = data.getFloat(0);
 		screenPosManual();
 		updateValues();
 	}else if(data.getXmlName() == "SP_Z"){
-		thisEnviron.spherePos.z = data.getFloat(0);
+		env.spherePos.z = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_X"){
-		thisEnviron.spherePos.x = data.getFloat(0);
+		env.spherePos.x = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_Y"){
-		thisEnviron.spherePos.y = data.getFloat(0);
+		env.spherePos.y = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_RAD"){
-		thisEnviron.sphereRad = data.getFloat(0);
+		env.sphereRad = data.getFloat(0);
 	}else if(data.getXmlName() == "SC_CALIB"){
         scCalibStage = 1;
 	}else if(data.getXmlName() == "OUTPUT"){
@@ -277,12 +285,12 @@ void testApp::eventsIn(guiCallbackData & data){
 
 void testApp::updateValues(){
 
-    scRotsl->setValue(thisEnviron.screenRot, 0);
-    scYsl->setValue(thisEnviron.screenCenter.y, 0);
-    scXsl->setValue(thisEnviron.screenCenter.x, 0);
-    scZsl->setValue(thisEnviron.screenCenter.z, 0);
-    scWsl->setValue(thisEnviron.screenDims.x, 0);
-    scHsl->setValue(thisEnviron.screenDims.y, 0);
+    scRotsl->setValue(env.screenRot, 0);
+    scYsl->setValue(env.screenCenter.y, 0);
+    scXsl->setValue(env.screenCenter.x, 0);
+    scZsl->setValue(env.screenCenter.z, 0);
+    scWsl->setValue(env.screenDims.x, 0);
+    scHsl->setValue(env.screenDims.y, 0);
 
 }
 
@@ -330,12 +338,12 @@ void testApp::update(){
 		ofVec3f vN(floorPlane.vNormal.X, floorPlane.vNormal.Y, floorPlane.vNormal.Z);
 		vN.normalize();
 		ofVec3f yRef(0,1,0);
-		thisEnviron.fRotAngle = yRef.angle(vN);
-		thisEnviron.fRotAxis = vN.getCrossed(yRef);
+		env.fRotAngle = yRef.angle(vN);
+		env.fRotAxis = vN.getCrossed(yRef);
 		kinectPos.set(0,0,0);
-		kinectPos.rotate(thisEnviron.fRotAngle, ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z), thisEnviron.fRotAxis);
+		kinectPos.rotate(env.fRotAngle, ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z), env.fRotAxis);
 
-		thisEnviron.floorPoint = ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z);
+		env.floorPoint = ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z);
 
 	}
 
@@ -347,14 +355,14 @@ void testApp::update(){
 void testApp::screenPosManual(){ //this is just for manual settings of screenPosition, size and orientation
 
 
-    thisEnviron.screenP.set(thisEnviron.screenCenter.x - (thisEnviron.screenDims.x/2), thisEnviron.screenCenter.y - (thisEnviron.screenDims.y/2), thisEnviron.screenCenter.z);
-    thisEnviron.screenQ.set(thisEnviron.screenCenter.x + (thisEnviron.screenDims.x/2), thisEnviron.screenCenter.y + (thisEnviron.screenDims.y/2), thisEnviron.screenCenter.z);
-    thisEnviron.screenR.set(thisEnviron.screenCenter.x - (thisEnviron.screenDims.x/2), thisEnviron.screenCenter.y + (thisEnviron.screenDims.y/2), thisEnviron.screenCenter.z);
+    env.screenP.set(env.screenCenter.x - (env.screenDims.x/2), env.screenCenter.y - (env.screenDims.y/2), env.screenCenter.z);
+    env.screenQ.set(env.screenCenter.x + (env.screenDims.x/2), env.screenCenter.y + (env.screenDims.y/2), env.screenCenter.z);
+    env.screenR.set(env.screenCenter.x - (env.screenDims.x/2), env.screenCenter.y + (env.screenDims.y/2), env.screenCenter.z);
   //  screenS.set(screenCenter.x + (screenDims.x/2), screenCenter.y - (screenDims.y/2), screenCenter.z);
 
-    thisEnviron.screenP.rotate(thisEnviron.screenRot, thisEnviron.screenCenter, ofVec3f(0,1,0));
-    thisEnviron.screenQ.rotate(thisEnviron.screenRot, thisEnviron.screenCenter, ofVec3f(0,1,0));
-    thisEnviron.screenR.rotate(thisEnviron.screenRot, thisEnviron.screenCenter, ofVec3f(0,1,0));
+    env.screenP.rotate(env.screenRot, env.screenCenter, ofVec3f(0,1,0));
+    env.screenQ.rotate(env.screenRot, env.screenCenter, ofVec3f(0,1,0));
+    env.screenR.rotate(env.screenRot, env.screenCenter, ofVec3f(0,1,0));
    // screenS.rotate(screenRot, screenCenter, ofVec3f(0,1,0)); //this is done in calculateScreenPlane
 
     calculateScreenPlane();
@@ -377,7 +385,7 @@ void testApp::screenPosAuto(){
     while(!pFound){
 
         ofVec3f p = (calVecs[0] * mul + dsUsers[currentUserId].getUPoint());
-        ofVec3f r = p - ofVec3f(0,thisEnviron.screenDims.y,0); //ray cast down y axis for size of screen
+        ofVec3f r = p - ofVec3f(0,env.screenDims.y,0); //ray cast down y axis for size of screen
         ofVec3f pb = dsUsers[currentUserId].getUPoint(); //the user
         ofVec3f pc = calVecs[2] * 10000 + dsUsers[currentUserId].getUPoint(); //the ray to R
 
@@ -395,8 +403,8 @@ void testApp::screenPosAuto(){
 
         }else{
             dist = t_dist;
-            thisEnviron.screenR = r;
-            thisEnviron.screenP = p;
+            env.screenR = r;
+            env.screenP = p;
             mul += 1; //maybe we need a more efficient search ...nah
         }
 
@@ -408,8 +416,8 @@ void testApp::screenPosAuto(){
     bool qFound = false;
 
     dist = 10000;
-    ofVec3f q = thisEnviron.screenR; // a point on vec UR screenWidth from R
-    q.x += thisEnviron.screenDims.x;
+    ofVec3f q = env.screenR; // a point on vec UR screenWidth from R
+    q.x += env.screenDims.x;
     ofVec3f qb = dsUsers[currentUserId].getUPoint(); //the user
     ofVec3f qc = calVecs[1] * 10000 + dsUsers[currentUserId].getUPoint(); //the ray to Q
 
@@ -428,9 +436,9 @@ void testApp::screenPosAuto(){
 
         }else{
 
-        thisEnviron.screenQ = q;
+        env.screenQ = q;
         dist = t_dist;
-        q.rotate(1,thisEnviron.screenP,ofVec3f(0,1,0));
+        q.rotate(1,env.screenP,ofVec3f(0,1,0));
 
         }
 
@@ -438,14 +446,14 @@ void testApp::screenPosAuto(){
 
     calculateScreenPlane();
 
-    if(thisEnviron.screenRot > 90){
+    if(env.screenRot > 90){
 
-        thisEnviron.screenRot -= 180;
+        env.screenRot -= 180;
         screenPosManual();
 
-    }else if(thisEnviron.screenRot < 90){
+    }else if(env.screenRot < 90){
 
-        thisEnviron.screenRot += 180;
+        env.screenRot += 180;
         screenPosManual();
 
     }
@@ -454,21 +462,21 @@ void testApp::screenPosAuto(){
 void testApp::calculateScreenPlane(){
 
         ofVec3f pq ,pr;
-		pq = thisEnviron.screenQ - thisEnviron.screenP; pr = thisEnviron.screenR - thisEnviron.screenP;
+		pq = env.screenQ - env.screenP; pr = env.screenR - env.screenP;
 
-        thisEnviron.screenCenter = thisEnviron.screenP.getMiddle(thisEnviron.screenQ); //in case hasn't been set
-		thisEnviron.screenNormal = pq.getCrossed(pr);
-		thisEnviron.screenNormal.normalize();
-		ofVec3f dV = thisEnviron.screenNormal.dot(thisEnviron.screenP);
-		thisEnviron.screenD = dV.x + dV.y + dV.z;
+        env.screenCenter = env.screenP.getMiddle(env.screenQ); //in case hasn't been set
+		env.screenNormal = pq.getCrossed(pr);
+		env.screenNormal.normalize();
+		ofVec3f dV = env.screenNormal.dot(env.screenP);
+		env.screenD = dV.x + dV.y + dV.z;
 
 		// now get Rotation
 		ofVec3f axis(0,0,1);
-		thisEnviron.screenRot = axis.angle(thisEnviron.screenNormal);
-		if(thisEnviron.screenNormal.x < 0)thisEnviron.screenRot *= -1; //direction correction
+		env.screenRot = axis.angle(env.screenNormal);
+		if(env.screenNormal.x < 0)env.screenRot *= -1; //direction correction
 
         //calculate point S
-        thisEnviron.screenS = thisEnviron.screenP.getRotated(180,thisEnviron.screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
+        env.screenS = env.screenP.getRotated(180,env.screenCenter,ofVec3f(0,1,0)); //in case hasn't already been set
 
 
 }
@@ -544,10 +552,10 @@ void testApp::getScreenCalibrationPoints(){
             screenPosAuto(); //calculate screen points given it's size
             countdown = 5;
             scCalTog->setValue(0,0);
-            scXsl->setValue(thisEnviron.screenCenter.x, 0);
-            scYsl->setValue(thisEnviron.screenCenter.y, 0);
-            scZsl->setValue(thisEnviron.screenCenter.z, 0);
-            scRotsl->setValue(thisEnviron.screenRot,0);
+            scXsl->setValue(env.screenCenter.x, 0);
+            scYsl->setValue(env.screenCenter.y, 0);
+            scZsl->setValue(env.screenCenter.z, 0);
+            scRotsl->setValue(env.screenRot,0);
             dsUsers[currentUserId].isCalibrating = false;
             currentUserId = 0;
             scCalString = "";
@@ -655,27 +663,27 @@ void testApp::draw3Dscene(bool drawScreen){
 
 	glTranslatef(0, 5000, 5000);
 
-	ofBox(kinectPos.x, -(kinectPos.y - floorPlane.ptPoint.Y) * thisEnviron.viewScale, -kinectPos.z, 150); //the origin aka(kinect)
+	ofBox(kinectPos.x, -(kinectPos.y - floorPlane.ptPoint.Y) * env.viewScale, -kinectPos.z, 150); //the origin aka(kinect)
 
 	//drawfloor Plane and normal
 
 	if(isRawCloud){
 
-		ofLine(floorPlane.ptPoint.X *thisEnviron.viewScale, 0, -5000 * thisEnviron.viewScale,
-			   floorPlane.ptPoint.X *thisEnviron.viewScale, 0, 0
+		ofLine(floorPlane.ptPoint.X *env.viewScale, 0, -5000 * env.viewScale,
+			   floorPlane.ptPoint.X *env.viewScale, 0, 0
 			   );
 
-		ofLine(-5000, 0, -floorPlane.ptPoint.Z * thisEnviron.viewScale,
-			   5000, 0, -floorPlane.ptPoint.Z * thisEnviron.viewScale
+		ofLine(-5000, 0, -floorPlane.ptPoint.Z * env.viewScale,
+			   5000, 0, -floorPlane.ptPoint.Z * env.viewScale
 			   );
 
-		ofLine(floorPlane.ptPoint.X * thisEnviron.viewScale - (floorPlane.vNormal.X*1000),
+		ofLine(floorPlane.ptPoint.X * env.viewScale - (floorPlane.vNormal.X*1000),
 			   floorPlane.vNormal.Y * 1000,
-			   -(floorPlane.ptPoint.Z * thisEnviron.viewScale - (floorPlane.vNormal.Z*1000)),
+			   -(floorPlane.ptPoint.Z * env.viewScale - (floorPlane.vNormal.Z*1000)),
 
-			   floorPlane.ptPoint.X * thisEnviron.viewScale + (floorPlane.vNormal.X*1000),
+			   floorPlane.ptPoint.X * env.viewScale + (floorPlane.vNormal.X*1000),
 			   -(floorPlane.vNormal.Y * 1000),
-			   -(floorPlane.ptPoint.Z * thisEnviron.viewScale + (floorPlane.vNormal.Z*1000))
+			   -(floorPlane.ptPoint.Z * env.viewScale + (floorPlane.vNormal.Z*1000))
 			   );
 
 	}else{
@@ -692,25 +700,25 @@ void testApp::draw3Dscene(bool drawScreen){
 
 	}
 
-    if(thisEnviron.isScreen){
+    if(env.isScreen){
 
 		glPushMatrix();
 		ofSetColor(255);
-		glScalef(thisEnviron.viewScale,thisEnviron.viewScale,thisEnviron.viewScale);
+		glScalef(env.viewScale,env.viewScale,env.viewScale);
 		glTranslatef(0,floorPlane.ptPoint.Y,0);
-        ofLine(thisEnviron.screenP.x, -thisEnviron.screenP.y, -thisEnviron.screenP.z, thisEnviron.screenQ.x, -thisEnviron.screenQ.y, -thisEnviron.screenQ.z);
-        ofLine(thisEnviron.screenP.x, -thisEnviron.screenP.y, -thisEnviron.screenP.z, thisEnviron.screenR.x, -thisEnviron.screenR.y, -thisEnviron.screenR.z);
-        ofLine(thisEnviron.screenQ.x, -thisEnviron.screenQ.y, -thisEnviron.screenQ.z, thisEnviron.screenR.x, -thisEnviron.screenR.y, -thisEnviron.screenR.z);
-        ofLine(thisEnviron.screenS.x, -thisEnviron.screenS.y, -thisEnviron.screenS.z, thisEnviron.screenP.x, -thisEnviron.screenP.y, -thisEnviron.screenP.z);
-        ofLine(thisEnviron.screenS.x, -thisEnviron.screenS.y, -thisEnviron.screenS.z, thisEnviron.screenR.x, -thisEnviron.screenR.y, -thisEnviron.screenR.z);
-        ofLine(thisEnviron.screenS.x, -thisEnviron.screenS.y, -thisEnviron.screenS.z, thisEnviron.screenQ.x, -thisEnviron.screenQ.y, -thisEnviron.screenQ.z);
+        ofLine(env.screenP.x, -env.screenP.y, -env.screenP.z, env.screenQ.x, -env.screenQ.y, -env.screenQ.z);
+        ofLine(env.screenP.x, -env.screenP.y, -env.screenP.z, env.screenR.x, -env.screenR.y, -env.screenR.z);
+        ofLine(env.screenQ.x, -env.screenQ.y, -env.screenQ.z, env.screenR.x, -env.screenR.y, -env.screenR.z);
+        ofLine(env.screenS.x, -env.screenS.y, -env.screenS.z, env.screenP.x, -env.screenP.y, -env.screenP.z);
+        ofLine(env.screenS.x, -env.screenS.y, -env.screenS.z, env.screenR.x, -env.screenR.y, -env.screenR.z);
+        ofLine(env.screenS.x, -env.screenS.y, -env.screenS.z, env.screenQ.x, -env.screenQ.y, -env.screenQ.z);
 
         glPushMatrix();
         ofSetColor(0,0,255);
-        glTranslatef(thisEnviron.screenCenter.x, -thisEnviron.screenCenter.y, -thisEnviron.screenCenter.z);
+        glTranslatef(env.screenCenter.x, -env.screenCenter.y, -env.screenCenter.z);
         ofSetRectMode(OF_RECTMODE_CENTER);
-        glRotatef(-thisEnviron.screenRot, 0,1,0);
-        ofRect(0,0,thisEnviron.screenDims.x * thisEnviron.screenBuffer.x, thisEnviron.screenDims.y * thisEnviron.screenBuffer.y);
+        glRotatef(-env.screenRot, 0,1,0);
+        ofRect(0,0,env.screenDims.x * env.screenBuffer.x, env.screenDims.y * env.screenBuffer.y);
         ofSetRectMode(OF_RECTMODE_CORNER);
 
         glPopMatrix();
@@ -722,7 +730,7 @@ void testApp::draw3Dscene(bool drawScreen){
 
 		for(int i =0; i < activeUserList.size(); i++){
 
-			dsUsers[activeUserList[i]].drawIntersect(thisEnviron.viewScale);
+			dsUsers[activeUserList[i]].drawIntersect();
 		}
         glPopMatrix();
 
@@ -731,18 +739,18 @@ void testApp::draw3Dscene(bool drawScreen){
 
 
         glPushMatrix();
-        glScalef(thisEnviron.viewScale,thisEnviron.viewScale,thisEnviron.viewScale);
-        glTranslatef(thisEnviron.spherePos.x, -(thisEnviron.spherePos.y - floorPlane.ptPoint.Y), -thisEnviron.spherePos.z);
+        glScalef(env.viewScale,env.viewScale,env.viewScale);
+        glTranslatef(env.spherePos.x, -(env.spherePos.y - floorPlane.ptPoint.Y), -env.spherePos.z);
 
         ofNoFill();
         ofSetColor(100,100,100);
         ofSetLineWidth(1);
-        ofSphere(0, 0, 0, thisEnviron.sphereRad);
+        ofSphere(0, 0, 0, env.sphereRad);
 
         glPopMatrix();
 
         for(int i =0; i < activeUserList.size(); i++){
-			dsUsers[activeUserList[i]].drawSphereIntersect(thisEnviron.viewScale);
+			dsUsers[activeUserList[i]].drawSphereIntersect();
 		}
 
 
@@ -750,9 +758,9 @@ void testApp::draw3Dscene(bool drawScreen){
 	if(activeUserList.size() > 0 && currentUserId > 0){
 
 
-		if(isCloud)dsUsers[currentUserId].drawPointCloud(thisEnviron.viewScale, true, userColors[currentUserId]);
-		if(isRawCloud)dsUsers[currentUserId].drawPointCloud(thisEnviron.viewScale, false);
-		dsUsers[currentUserId].drawRWFeatures(thisEnviron.viewScale, true);
+		if(isCloud)dsUsers[currentUserId].drawPointCloud(true, userColors[currentUserId]);
+		if(isRawCloud)dsUsers[currentUserId].drawPointCloud( false);
+		dsUsers[currentUserId].drawRWFeatures(true);
 
 	}else{
 
@@ -760,8 +768,8 @@ void testApp::draw3Dscene(bool drawScreen){
 
 		    int id = activeUserList[i];
 
-		    if(isCloud)dsUsers[id].drawPointCloud(thisEnviron.viewScale, true, userColors[id]);
-		    dsUsers[id].drawRWFeatures(thisEnviron.viewScale, true);
+		    if(isCloud)dsUsers[id].drawPointCloud(true, userColors[id]);
+		    dsUsers[id].drawRWFeatures( true);
 
 		}
 
@@ -860,37 +868,37 @@ void testApp::keyPressed(int key){
         break;
 
         case '+':
-        thisEnviron.viewScale += 0.01;
-        if(thisEnviron.viewScale > 4)thisEnviron.viewScale = 4;
+        env.viewScale += 0.01;
+        if(env.viewScale > 4)env.viewScale = 4;
         break;
 
         case '-':
-        thisEnviron.viewScale -= 0.01;
-        if(thisEnviron.viewScale < 1)thisEnviron.viewScale = 1;
+        env.viewScale -= 0.01;
+        if(env.viewScale < 1)env.viewScale = 1;
         break;
 
 
         case '[':
-        thisEnviron.screenDims.x -= 1;
-        scWsl->setValue(thisEnviron.screenDims.x, 0);
+        env.screenDims.x -= 1;
+        scWsl->setValue(env.screenDims.x, 0);
 		screenPosManual();
         break;
 
         case ']':
-        thisEnviron.screenDims.x += 1;
-        scWsl->setValue(thisEnviron.screenDims.x, 0);
+        env.screenDims.x += 1;
+        scWsl->setValue(env.screenDims.x, 0);
 		screenPosManual();
         break;
 
         case '{':
-        thisEnviron.screenDims.y += 1;
-        scHsl->setValue(thisEnviron.screenDims.y, 0);
+        env.screenDims.y += 1;
+        scHsl->setValue(env.screenDims.y, 0);
 		screenPosManual();
         break;
 
         case '}':
-        thisEnviron.screenDims.y -= 1;
-        scHsl->setValue(thisEnviron.screenDims.y, 0);
+        env.screenDims.y -= 1;
+        scHsl->setValue(env.screenDims.y, 0);
 		screenPosManual();
         break;
 	}

@@ -3,7 +3,7 @@
 
 #define USE_IR
 //
-//#define USE_FILE
+#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
@@ -74,12 +74,13 @@ private:
 	dsUser  		        dsUsers[20];
 	vector<int>             activeUserList;
 	userManager             thisUM;
+    environment             thisEnviron;
 
 	guiTypeTextDropDown * userSelector;
 
 	ofImage				allUserMasks, depthRangeMask;
 
-	float				filterFactor, smoothFactor, yRot, xRot, zRot, zTrans, yTrans, viewScale;
+	float				filterFactor, smoothFactor, yRot, xRot, zRot, zTrans, yTrans;
 	int					selectedUser, currentUserId, numUsers;
 
 	string				minZ_rw_str, minY_rw_str, CoM_rw_str;
@@ -91,18 +92,8 @@ private:
 
 	XnPlane3D			floorPlane;
 
-	float				pointProp, eyeProp, sternProp;
-
     guiTypeToggle       * spTog, * scTog, * scCalTog;
-
     guiTypeSlider       * scXsl, * scYsl,  * scZsl, * scRotsl, * scWsl, *scHsl;
-
-    bool                isScreen;
-	float				screenZ, screenD, screenRot, sphereRad;
-	ofVec2f			    screenDims;
-
-	ofVec3f             screenP, screenQ, screenR, screenS, screenCenter, screenNormal;
-	ofVec3f             spherePos;
 
 	int scCalibStage;
 	string scCalString;
@@ -110,6 +101,7 @@ private:
     int outputMode;
 
     ofVec3f calVecs[3];
+
 
 
 };

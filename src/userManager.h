@@ -26,7 +26,7 @@ class userManager
     protected:
     private:
 
-    void sendPoint(int userId, ofVec2f point);
+    void sendPoint(int userId, ofVec2f point, bool isFake);
     void sendNewUser(int i);
     void sendLostUser(int i);
 
@@ -35,6 +35,8 @@ class userManager
     int outputMode;
 
     int currentUserList[20];//this can become a 2D array when 2nd kinect is introduced ?
+
+
 
 };
 

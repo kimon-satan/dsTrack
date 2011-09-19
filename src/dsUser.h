@@ -33,6 +33,40 @@ public:
 
 };
 
+class environment{
+
+public:
+
+    environment(){
+
+        viewScale = 2;
+        pointProp = 0.25;
+        eyeProp = 0.9375;
+        isScreen = true;
+        sternProp = 0.8;
+        uhZx_Thresh = 100;
+        allowDownPoint = 0.5;
+        screenBuffer.set(1.5,1.5);
+        moveThresh = 15;
+        sphereRad = 750;
+
+    };
+
+    float           viewScale;
+    float			pointProp, eyeProp, sternProp, allowDownPoint;
+    bool            isScreen;
+	float		    screenZ, screenD, screenRot, sphereRad;
+	ofVec2f			screenDims, screenBuffer;
+
+	ofVec3f         screenP, screenQ, screenR, screenS, screenCenter, screenNormal, spherePos;
+
+    int             moveThresh, uhZx_Thresh;
+
+    ofVec3f         floorPoint ,fRotAxis;
+	float           fRotAngle;
+
+};
+
 class dsUser{
 
 	public:
@@ -40,7 +74,7 @@ class dsUser{
 	dsUser();
 	~dsUser();
 
-    void setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen);
+    void setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t_depthGen, environment * t_env);
 	void update();
 
 	void setFloorPlane(ofVec3f tPoint, ofVec3f tAxis, float tAngle);
@@ -54,29 +88,13 @@ class dsUser{
 
 	string getDataStr(int type);
 
-	void setPointProp(float temp){pointProp = temp;}
-	void setEyeProp(float temp){eyeProp = temp;}
-	void setSternProp(float temp){sternProp = temp;}
-	void setScreen(float d, float rot, ofVec3f p, ofVec3f q, ofVec3f norm, ofVec3f centre, ofVec2f dims){
-
-        screenD = d;
-        screenRot = rot;
-        screenNormal = norm;
-        screenP = p;
-        screenQ = q;
-        screenCentre = centre;
-        screenDims = dims;
-
-	}
-	void setSphere(ofVec3f tsp, float tr){spherePos = tsp; sphereRad = tr;}
-
 	ofVec3f getUDir(){return u_dir;}
 	ofVec3f getUPoint(){return u_point;}
 	ofVec2f getScreenIntersect();
+	ofVec2f getFakeScreenIntersect();
 
 	int id;
-	float allowDownPoint;
-	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect, isMoving, sendMoveMessage;
+	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect, isFakeIntersect, isMoving, sendMoveMessage;
 
 	private:
 
@@ -90,29 +108,26 @@ class dsUser{
 	ofxDepthGenerator * depthGen;
 	XnPoint3D  * cloudPoints;
 	vector <ofVec3f> rotCloudPoints;
+    environment * thisEnviron;
 
-	ofVec3f floorPoint ,fRotAxis;
-	float fRotAngle;
-
-	int uhZx_Thresh, numCloudPoints;
-
+    int numCloudPoints;
 	bool  hpFound;
 
+    float pointThresh;
     ofVec3f sternum;
-	float eyeProp, pointProp, sternProp, pointThresh;
 
 	ofVec3f rot_CoM_rW, u_height, u_point, eye_Pos, u_dir;
 
 	vector<ofVec3f> up_history;
 	vector<ofVec3f> uh_history;
 
-	bool upMoving, uhMoving, dummyIntersect;
+	bool upMoving, uhMoving;
 
 	XnPoint3D CoM_rW;
 
-	float screenD, screenRot;
-	ofVec3f screenP, screenQ, screenNormal, screenCentre;
-    ofVec2f screenDims;
+    bool isBuffer;
+    int bufCount;
+    int moveThresh;
 
 	float sphereRad;
 	ofVec3f spherePos;

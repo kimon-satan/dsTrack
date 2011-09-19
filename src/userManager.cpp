@@ -6,6 +6,7 @@ userManager::userManager()
     for(int i = 0; i < 20; i ++)currentUserList[i] = 0;
     outputMode = 0;
     thisMess.setup(LOCAL_HOST, PORT);
+
     ofxOscMessage m;
     m.setAddress("/init");
     thisMess.sendMessage(m);
@@ -35,7 +36,8 @@ void userManager::manageUsers(){
 
         int t_id = activeUserList->at(i);
 
-        if(!dsUsers[t_id].isSleeping && dsUsers[t_id].isPointing && dsUsers[t_id].isIntersect){
+
+        if(!dsUsers[t_id].isSleeping && dsUsers[t_id].isPointing && (dsUsers[t_id].isIntersect || dsUsers[t_id].isFakeIntersect)){
             //register newUsers
             //assign a new id as old ids will be duplicated with 2 kinects (will need a 2d array for referencing)
             //duplicate users will be filtered out at the newUser/userAwake stage (more optimal)
@@ -52,11 +54,9 @@ void userManager::manageUsers(){
                         currentUserList[j] = t_id;
                         sendNewUser(j);
                         sendIsMoving(j, dsUsers[t_id].isMoving);
-
                         break;}
                     } //find an empty id and assign
             }
-
 
         }else{
 
@@ -78,7 +78,7 @@ void userManager::manageUsers(){
         if(currentUserList[j] > 0){
             int id = currentUserList[j];
             ofVec2f t = dsUsers[id].getScreenIntersect();
-            sendPoint(j, t);
+            sendPoint(j, t, dsUsers[id].isFakeIntersect);
             if(dsUsers[id].sendMoveMessage){
                 sendIsMoving(j, dsUsers[id].isMoving);
             }
@@ -105,7 +105,7 @@ void userManager::sendLostUser(int id){
 
 }
 
-void userManager::sendPoint(int userId, ofVec2f point){
+void userManager::sendPoint(int userId, ofVec2f point, bool isFake){
 
 
     ofxOscMessage m;
@@ -113,6 +113,7 @@ void userManager::sendPoint(int userId, ofVec2f point){
     m.addIntArg(userId);
     m.addFloatArg(point.x);
     m.addFloatArg(point.y);
+    m.addIntArg(isFake);
 
     thisMess.sendMessage(m);
 

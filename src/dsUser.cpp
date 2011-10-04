@@ -25,7 +25,6 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	cloudPoints = new XnPoint3D [userGen->getWidth()* userGen->getHeight()];
     isSleeping = false;
 	isIntersect = false;
-	isScreen = true;
 	isCalibrating = false;
 	sendMoveMessage = false;
 	isMoving = false;
@@ -221,7 +220,7 @@ void dsUser::updateFeatures(){
 
         (dist < env->moveThresh)? upMoving = false : upMoving = true;
 
-		(isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
+		(env->isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
 
         if(isIntersect || isBuffer){
             if(!upMoving && !uhMoving){
@@ -247,15 +246,15 @@ void dsUser::updateFeatures(){
 
         if(isBuffer && !isMoving){
 
-            if(bufCount < 20){bufCount += 1;}else{
-
+            if(bufCount < 20){bufCount += 1;
+                isFakeIntersect = false;
+            }else{
                 isFakeIntersect = true;
-                cout << "fakeI \n";
-
             }
 
         }else if((isBuffer && isMoving) || !isBuffer){
 
+            isFakeIntersect = false;
             bufCount = 0; //only conditions for reset;
         }
 
@@ -319,6 +318,7 @@ void dsUser::updateScreenIntersections(){
         rotIntersect.y > rotP.y && rotIntersect.y < rotQ.y){
 
         isIntersect = true;
+        isFakeIntersect = false;
         isBuffer = false;
 
     }else if(rotIntersect.x > bufP.x && rotIntersect.x < bufQ.x  &&
@@ -331,6 +331,7 @@ void dsUser::updateScreenIntersections(){
 
         if(rotIntersect.x <  rotP.x){
             rotIntersect.x = rotP.x;
+            cout << "fake x = " << rotIntersect.x << "\n";
         }else if(rotIntersect.x >  rotQ.x){
             rotIntersect.x = rotQ.x;
         }
@@ -345,6 +346,7 @@ void dsUser::updateScreenIntersections(){
     }else{
 
         isIntersect = false;
+        isFakeIntersect = false;
         isBuffer = false;
     }
 
@@ -507,12 +509,12 @@ void dsUser::drawRWFeatures(bool pointBox){
         glPopMatrix();
 
         glPushMatrix();
-        glTranslatef(sternum.x  * env->viewScale, -(sternum.y - pointThresh - env->floorPoint.y) * env->viewScale, -sternum.z * env->viewScale);
-        glTranslatef(0, -pointThresh * 2 * env->allowDownPoint * env->viewScale,0);
+        glTranslatef(sternum.x  * env->viewScale, -(sternum.y - env->floorPoint.y) * env->viewScale, -sternum.z * env->viewScale);
+        glTranslatef(0, pointThresh * env->allowDownPoint * env->viewScale,0);
         glRotatef(90,1,0,0);
         ofSetColor(255, 255,255);
         ofSetRectMode(OF_RECTMODE_CENTER);
-        ofRect(0,0, pointThresh * 2 * env->viewScale,pointThresh * 1.5 * env->viewScale);
+        ofRect(0,0, pointThresh * 2 * env->viewScale,pointThresh * 2 * env->viewScale);
         ofSetRectMode(OF_RECTMODE_CORNER);
         glPopMatrix();
 

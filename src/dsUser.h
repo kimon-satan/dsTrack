@@ -86,6 +86,7 @@ class dsUser{
 	void drawIntersect();
 	void drawSphereIntersect();
 
+
 	string getDataStr(int type);
 
 	ofVec3f getUDir(){return u_dir;}
@@ -93,8 +94,10 @@ class dsUser{
 	ofVec2f getScreenIntersect();
 	ofVec2f getFakeScreenIntersect();
 
+	ofVec2f getProjectedCoordinate();
+
 	int id;
-	bool isSleeping, isScreen, isPointing, isCalibrating, isIntersect, isFakeIntersect, isMoving, sendMoveMessage;
+	bool isSleeping, isPointing, isCalibrating, isIntersect, isFakeIntersect, isMoving, sendMoveMessage;
 
 	private:
 

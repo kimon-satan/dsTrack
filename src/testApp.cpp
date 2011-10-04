@@ -15,6 +15,7 @@ enum dataStingTypes{
 //--------------------------------------------------------------
 void testApp::setup() {
 
+
 	isCloud			= true;
 	isRawCloud	    = false;
 	isFloor			= true;
@@ -52,7 +53,7 @@ void testApp::setup() {
     env.screenDims.set(4000,3000);
     env.screenBuffer.set(1.5,1.5);
     env.screenCenter.set(0,2000);
-    env.spherePos.set(0,1500,0);
+    env.spherePos.set(0,-700,0);
 
     scCalibStage = 0;
 
@@ -191,7 +192,7 @@ void testApp::setupGUI(){
 
     spTog = gui.addToggle("SphereOn", "SP_ON", false);
     gui.addSlider("SphereX", "SP_X", env.spherePos.x , -10000, 10000, false);
-	gui.addSlider("SphereY", "SP_Y", env.spherePos.y , 0, 10000, false);
+	gui.addSlider("SphereY", "SP_Y", env.spherePos.y , -10000, 10000, false);
 	gui.addSlider("SphereZ", "SP_Z", env.spherePos.z , -10000, 5000, false);
     gui.addSlider("SphereRad", "SP_RAD", env.sphereRad , 100, 3500, false);
 
@@ -225,6 +226,10 @@ void testApp::eventsIn(guiCallbackData & data){
 		env.sternProp = data.getFloat(0);
     }else if(data.getXmlName() == "ALLOW_DOWN"){
 		env.allowDownPoint = data.getFloat(0);
+    }else if(data.getXmlName() == "MOVE_THRESH"){
+        env.moveThresh = data.getInt(0);
+    }else if(data.getXmlName() == "ZX_THRESH"){
+        env.uhZx_Thresh = data.getInt(0);
 	}else if(data.getXmlName() == "FIND_FLOOR"){
 		isFloor = data.getInt(0);
 	}else if(data.getXmlName() == "SELECT_USER"){
@@ -265,6 +270,10 @@ void testApp::eventsIn(guiCallbackData & data){
 		env.screenRot = data.getFloat(0);
 		screenPosManual();
 		updateValues();
+    }else if(data.getXmlName() == "BUF_X"){
+        env.screenBuffer.x = data.getFloat(0);
+    }else if(data.getXmlName() == "BUF_Y"){
+        env.screenBuffer.y = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_Z"){
 		env.spherePos.z = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_X"){
@@ -341,7 +350,7 @@ void testApp::update(){
 		env.fRotAngle = yRef.angle(vN);
 		env.fRotAxis = vN.getCrossed(yRef);
 		kinectPos.set(0,0,0);
-		kinectPos.rotate(env.fRotAngle, ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z), env.fRotAxis);
+	//	kinectPos.rotate(env.fRotAngle, ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z), env.fRotAxis);
 
 		env.floorPoint = ofVec3f(floorPlane.ptPoint.X, floorPlane.ptPoint.Y, floorPlane.ptPoint.Z);
 
@@ -480,6 +489,8 @@ void testApp::calculateScreenPlane(){
 
 
 }
+
+
 
 void testApp::getScreenCalibrationPoints(){
 
@@ -647,7 +658,7 @@ void testApp::draw(){
 
 
 void testApp::draw3Dscene(bool drawScreen){
-
+glEnable(GL_DEPTH_TEST);
 	glPushMatrix();
 	glTranslatef(ofGetWidth()/2,ofGetHeight()/2, 0);
 	glScalef(0.1, 0.1, 0.1);
@@ -664,6 +675,7 @@ void testApp::draw3Dscene(bool drawScreen){
 	glTranslatef(0, 5000, 5000);
 
 	ofBox(kinectPos.x, -(kinectPos.y - floorPlane.ptPoint.Y) * env.viewScale, -kinectPos.z, 150); //the origin aka(kinect)
+	ofLine(0,-floorPlane.ptPoint.Y,0, 0,-10000,0);
 
 	//drawfloor Plane and normal
 
@@ -776,6 +788,7 @@ void testApp::draw3Dscene(bool drawScreen){
 	}
 
 	glPopMatrix();
+	glDisable(GL_DEPTH_TEST);
 }
 
 

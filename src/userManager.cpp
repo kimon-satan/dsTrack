@@ -22,7 +22,7 @@ void userManager::sendOutputMode(int t_out){
         ofxOscMessage m;
         m.setAddress("/outputMode");
         m.addIntArg(outputMode);
-        thisMess.sendMessage(m);
+       // thisMess.sendMessage(m);
 
 }
 
@@ -77,7 +77,10 @@ void userManager::manageUsers(){
     for(int j = 0; j < 20; j ++){
         if(currentUserList[j] > 0){
             int id = currentUserList[j];
-            ofVec2f t = dsUsers[id].getScreenIntersect();
+            ofVec2f t;
+            if(env->isScreen){t = dsUsers[id].getScreenIntersect();}else{
+             t = dsUsers[id].getSphereIntersect();
+            }
             sendPoint(j, t, dsUsers[id].isFakeIntersect);
             if(dsUsers[id].sendMoveMessage){
                 sendIsMoving(j, dsUsers[id].isMoving);

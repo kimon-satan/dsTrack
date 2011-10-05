@@ -32,7 +32,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "StillAndMove.oni";
+	fileName = "morePointing.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -53,7 +53,7 @@ void testApp::setup() {
     env.screenDims.set(4000,3000);
     env.screenBuffer.set(1.5,1.5);
     env.screenCenter.set(0,2000);
-    env.spherePos.set(0,-700,0);
+    env.spherePos.set(0,700,0);
 
     scCalibStage = 0;
 
@@ -78,7 +78,7 @@ void testApp::setup() {
 
     thisUM.dsUsers = &dsUsers[0];
     thisUM.activeUserList = &activeUserList;
-
+    thisUM.env = &env;
 }
 
 void testApp::setupRecording(string _filename) {

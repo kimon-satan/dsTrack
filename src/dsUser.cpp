@@ -331,7 +331,6 @@ void dsUser::updateScreenIntersections(){
 
         if(rotIntersect.x <  rotP.x){
             rotIntersect.x = rotP.x;
-            cout << "fake x = " << rotIntersect.x << "\n";
         }else if(rotIntersect.x >  rotQ.x){
             rotIntersect.x = rotQ.x;
         }
@@ -358,6 +357,7 @@ ofVec2f dsUser::getScreenIntersect(){
     ofVec2f i(rotIntersect.x - env->screenCenter.x, rotIntersect.y - env->screenCenter.y);
     i /= env->screenDims;
 
+    cout << i.x <<","<< i.y << "\n";
     return i;
 
 }
@@ -433,6 +433,29 @@ void dsUser::updateSphereIntersections(){
         intersection = p2;
 		isIntersect = false; // a miss !
 	}
+
+
+}
+
+ofVec2f dsUser::getSphereIntersect(){
+
+    //first we need to make the origin 0
+    ofVec2f p_i;
+    ofVec3f o_i;
+    o_i = intersection - env->spherePos;
+
+
+    float lat,lon;
+
+    lat =  ofDegToRad(90) -  acos(o_i.y/env->sphereRad)/2;
+    lon = atan(o_i.x/o_i.z);
+
+   p_i.x = cos(lat) * sin(lon);
+   p_i.y = sin(lat) -  cos(lat) * cos(lon);
+
+    p_i/= 2;
+
+   return p_i;
 
 
 }

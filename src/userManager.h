@@ -22,6 +22,7 @@ class userManager
 
         dsUser * dsUsers;
         vector <int> * activeUserList;
+        environment * env;
 
     protected:
     private:
@@ -33,6 +34,7 @@ class userManager
 
     ofxOscSender thisMess;
     int outputMode;
+
 
     int currentUserList[20];//this can become a 2D array when 2nd kinect is introduced ?
 

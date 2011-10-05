@@ -94,7 +94,7 @@ class dsUser{
 	ofVec2f getScreenIntersect();
 	ofVec2f getFakeScreenIntersect();
 
-	ofVec2f getProjectedCoordinate();
+	ofVec2f getSphereIntersect();
 
 	int id;
 	bool isSleeping, isPointing, isCalibrating, isIntersect, isFakeIntersect, isMoving, sendMoveMessage;

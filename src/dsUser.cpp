@@ -244,19 +244,6 @@ void dsUser::updateFeatures(){
             }
         }
 
-        if(isBuffer && !isMoving){
-
-            if(bufCount < 20){bufCount += 1;
-                isFakeIntersect = false;
-            }else{
-                isFakeIntersect = true;
-            }
-
-        }else if((isBuffer && isMoving) || !isBuffer){
-
-            isFakeIntersect = false;
-            bufCount = 0; //only conditions for reset;
-        }
 
 
 	}else{
@@ -386,10 +373,41 @@ void dsUser::updateSphereIntersections(){
         return;
     }
 
+    isIntersect = solveSphereIntersection(env->sphereRad);
+    if(!isIntersect){
+        isFakeIntersect = solveSphereIntersection(env->sphereRad * env->sphereBufferMul);
+
+        if(isFakeIntersect){
+
+            //now work out the projected intersection
+            ofVec3f pa;
+            pa = (env->spherePos - u_point);
+            ofVec3f x_point;
+            x_point = u_point + pa.dot(u_dir) * u_dir;
+            ofVec3f xp = x_point - env->spherePos;
+            intersection = env->spherePos + xp.normalize() * env->sphereRad;
+
+
+        }else{
+
+            isFakeIntersect = false;
+        }
+
+    }else{
+
+        isFakeIntersect = false;
+    }
+
+
+
+}
+
+bool dsUser::solveSphereIntersection(float radius){
+
 
     // now calculate another point beyond the sphere
 
-	float t = env->spherePos.z - env->sphereRad + eye_Pos.z/u_dir.z;
+	float t = env->spherePos.z - radius + eye_Pos.z/u_dir.z;
 
 	ofVec3f p2(eye_Pos.x - u_dir.x * t,
               eye_Pos.y - u_dir.y * t,
@@ -402,7 +420,7 @@ void dsUser::updateSphereIntersections(){
                + (p2.y-u_point.y) * (u_point.y - env->spherePos.y)
                 + (p2.z-u_point.z) * (u_point.z - env->spherePos.z));
 
-    double c = pow((u_point.x-env->spherePos.x),2) + pow((u_point.y-env->spherePos.y),2) + pow((u_point.z-env->spherePos.z),2) - pow(env->sphereRad,2);
+    double c = pow((u_point.x-env->spherePos.x),2) + pow((u_point.y-env->spherePos.y),2) + pow((u_point.z-env->spherePos.z),2) - pow(radius,2);
 
     //now solve it
 
@@ -426,12 +444,12 @@ void dsUser::updateSphereIntersections(){
 
         (inter1.z > inter2.z) ? intersection = inter1 : intersection = inter2;
 
-        isIntersect = true;
+         return true;
 
 	}else{
 
         intersection = p2;
-		isIntersect = false; // a miss !
+        return false;
 	}
 
 
@@ -581,6 +599,7 @@ void dsUser::drawSphereIntersect(){
 	if(isPointing){
         ofFill();
         (isIntersect) ? ofSetColor(0, 255, 0): ofSetColor(255,0,0);
+        if(isFakeIntersect)ofSetColor(0,0,255);
         ofBox(intersection.x * env->viewScale, -(intersection.y - env->floorPoint.y) * env->viewScale, -intersection.z * env->viewScale, 150);
 	}
 

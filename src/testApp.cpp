@@ -121,7 +121,7 @@ void testApp::setupRecording(string _filename) {
 void testApp::setupGUI(){
 
 	//gui.loadFont("MONACO.TTF", 8);
-	gui.setup("settings", 0, 0, ofGetWidth(), ofGetHeight());
+	gui.setup("settings", 0, 0, ofGetScreenWidth(), ofGetScreenHeight());
 	gui.addPanel("Camera", 4, false);
 	gui.addPanel("User", 4, false);
 	gui.addPanel("Screen", 4, false);
@@ -130,6 +130,9 @@ void testApp::setupGUI(){
 	gui.setWhichPanel(0);
 	gui.setWhichColumn(0);
 
+    fileTxtIn = gui.addTextInput("settingsFile", "mySettings.xml", 200);
+    opTog = gui.addToggle("open","OPEN", false);
+    svTog = gui.addToggle("save","SAVE", false);
 	gui.addSlider("tilt", "TILT", 0, -35, 35, false);
 
 	vector <guiVariablePointer> t_vars;
@@ -165,12 +168,12 @@ void testApp::setupGUI(){
 
 	gui.addToggle("find floor", "FIND_FLOOR", isFloor);
 
-	gui.addSlider("pointTestProp", "POINT_PROP", env.pointProp, 0.01, 1.0, false);
-	gui.addSlider("hp_zxThresh", "ZX_THRESH", env.uhZx_Thresh, 10, 200, false);
-	gui.addSlider("eyeProp", "EYE_PROP", env.eyeProp, 0.01, 1.0, false);
-	gui.addSlider("sternProp", "STERN_PROP", env.sternProp, 0.01, 1.0, false);
-	gui.addSlider("allowDownPoint", "ALLOW_DOWN", env.allowDownPoint, 0.01, 1.0, false);
-	gui.addSlider("moveThresh", "MOVE_THRESH", env.moveThresh, 1, 50, false);
+	ptsl = gui.addSlider("pointTestProp", "POINT_PROP", env.pointProp, 0.01, 1.0, false);
+	uhZxsl = gui.addSlider("hp_zxThresh", "ZX_THRESH", env.uhZx_Thresh, 10, 200, false);
+	epsl = gui.addSlider("eyeProp", "EYE_PROP", env.eyeProp, 0.01, 1.0, false);
+	stsl = gui.addSlider("sternProp", "STERN_PROP", env.sternProp, 0.01, 1.0, false);
+	adpsl = gui.addSlider("allowDownPoint", "ALLOW_DOWN", env.allowDownPoint, 0.01, 1.0, false);
+	mtsl = gui.addSlider("moveThresh", "MOVE_THRESH", env.moveThresh, 1, 50, false);
 
 	gui.setWhichPanel(2);
 
@@ -191,10 +194,11 @@ void testApp::setupGUI(){
     gui.addLabel("Sphere Properties");
 
     spTog = gui.addToggle("SphereOn", "SP_ON", false);
-    gui.addSlider("SphereX", "SP_X", env.spherePos.x , -10000, 10000, false);
-	gui.addSlider("SphereY", "SP_Y", env.spherePos.y , -10000, 10000, false);
-	gui.addSlider("SphereZ", "SP_Z", env.spherePos.z , -10000, 5000, false);
-    gui.addSlider("SphereRad", "SP_RAD", env.sphereRad , 100, 3500, false);
+    spXsl = gui.addSlider("SphereX", "SP_X", env.spherePos.x , -10000, 10000, false);
+	spYsl = gui.addSlider("SphereY", "SP_Y", env.spherePos.y , -10000, 10000, false);
+	spZsl = gui.addSlider("SphereZ", "SP_Z", env.spherePos.z , -10000, 5000, false);
+    spRsl = gui.addSlider("SphereRad", "SP_RAD", env.sphereRad , 100, 3500, false);
+    spBMsl = gui.addSlider("SphereBufferMul", "SP_BUF", env.sphereBufferMul , 1, 10, false);
 
 
     gui.setWhichPanel(3);
@@ -211,13 +215,21 @@ void testApp::setupGUI(){
 	gui.enableEvents();
 
 	ofAddListener(gui.guiEvent, this, &testApp::eventsIn);
+
+
 }
 
 void testApp::eventsIn(guiCallbackData & data){
 
 
 	if(data.getXmlName() == "TILT"){
+
+	    #ifdef USE_FILE
+		cout << "no device connected \n";
+		#else
 		hardware.setTiltAngle(data.getFloat(0));
+		#endif
+
 	}else if(data.getXmlName() == "POINT_PROP"){
 		env.pointProp = data.getFloat(0);
 	}else if(data.getXmlName() == "EYE_PROP"){
@@ -282,24 +294,135 @@ void testApp::eventsIn(guiCallbackData & data){
 		env.spherePos.y = data.getFloat(0);
 	}else if(data.getXmlName() == "SP_RAD"){
 		env.sphereRad = data.getFloat(0);
+    }else if(data.getXmlName() == "SP_BUF"){
+		env.sphereBufferMul = data.getFloat(0);
 	}else if(data.getXmlName() == "SC_CALIB"){
         scCalibStage = 1;
 	}else if(data.getXmlName() == "OUTPUT"){
         outputMode = data.getInt(0);
         thisUM.sendOutputMode(outputMode);
+	}else if(data.getXmlName() == "OPEN"){
+        openSettings(fileTxtIn->getValueText());
+        opTog->setValue(0,0);
+	}else if(data.getXmlName() == "SAVE"){
+        saveSettings(fileTxtIn->getValueText());
+        svTog->setValue(0,0);
 	}
 
 
 }
 
+void testApp::saveSettings(string fileName){
+
+    ofxXmlSettings XML;
+    int tagNum = XML.addTag("DSTRACK");
+    if(XML.pushTag("DSTRACK", tagNum)){
+
+        XML.setValue("POINT_PROP",env.pointProp,tagNum);
+        XML.setValue("STERN_PROP",env.sternProp, tagNum);
+        XML.setValue("EYE_PROP",env.eyeProp,tagNum);
+        XML.setValue("UH_ZX_THRESH", env.uhZx_Thresh, tagNum);
+        XML.setValue("MOVE_THRESH", env.moveThresh, tagNum);
+        XML.setValue("ALLOW_DOWNPOINT", env.allowDownPoint, tagNum);
+        XML.setValue("IS_SCREEN", env.isScreen, tagNum);
+
+        XML.setValue("SCREEN_POS_X", env.screenCenter.x,tagNum);
+        XML.setValue("SCREEN_POS_Y", env.screenCenter.y),tagNum;
+        XML.setValue("SCREEN_POS_Z", env.screenCenter.z,tagNum);
+        XML.setValue("SCREEN_ROT", env.screenRot,tagNum);
+
+        XML.setValue("SCREEN_DIMS_X", env.screenDims.x,tagNum);
+        XML.setValue("SCREEN_DIMS_Y", env.screenDims.y,tagNum);
+        XML.setValue("SCREEN_BUF_X", env.screenBuffer.x,tagNum);
+        XML.setValue("SCREEN_BUF_Y", env.screenBuffer.y,tagNum);
+
+        XML.setValue("SPHERE_POS_X",env.spherePos.x, tagNum);
+        XML.setValue("SPHERE_POS_Y",env.spherePos.y, tagNum);
+        XML.setValue("SPHERE_POS_Z",env.spherePos.z, tagNum);
+
+        XML.setValue("SPHERE_RADIUS", env.sphereRad,tagNum);
+        XML.setValue("SPHERE_BUFFER_MUL", env.sphereBufferMul, tagNum);
+
+        XML.popTag();
+    }
+    XML.saveFile(fileName);
+
+}
+
+void testApp::openSettings(string fileName){
+
+    ofxXmlSettings XML;
+
+    if(XML.loadFile(fileName)){
+    cout << "loading \n";
+    }else{
+    cout << "can't find file \n";
+    return;
+    }
+
+    if(XML.pushTag("DSTRACK")){
+
+      //  val = XML.getValue("TILT", 0.0f)
+
+
+        env.pointProp = XML.getValue("POINT_PROP", 0.0f);
+        env.sternProp = XML.getValue("STERN_PROP", 0.0f);
+        env.eyeProp = XML.getValue("EYE_PROP",0.0f);
+        env.uhZx_Thresh = XML.getValue("UH_ZX_THRESH", 0.0f);
+        env.moveThresh = XML.getValue("MOVE_THRESH", 0.0f);
+        env.allowDownPoint = XML.getValue("ALLOW_DOWNPOINT", 0.0f);
+        env.isScreen = XML.getValue("IS_SCREEN", 0);
+
+        env.screenCenter.x = XML.getValue("SCREEN_POS_X", 0.0f);
+        env.screenCenter.y = XML.getValue("SCREEN_POS_Y", 0.0f);
+        env.screenCenter.z = XML.getValue("SCREEN_POS_Z", 0.0f);
+        env.screenRot = XML.getValue("SCREEN_ROT",0.0f);
+
+        env.screenDims.x = XML.getValue("SCREEN_DIMS_X", 0.0f);
+        env.screenDims.y = XML.getValue("SCREEN_DIMS_Y", 0.0f);
+        env.screenBuffer.x = XML.getValue("SCREEN_BUF_X", 0.0f);
+        env.screenBuffer.y = XML.getValue("SCREEN_BUF_Y", 0.0f);
+
+        env.spherePos.x = XML.getValue("SPHERE_POS_X",0.0f);
+        env.spherePos.y = XML.getValue("SPHERE_POS_Y",0.0f);
+        env.spherePos.z = XML.getValue("SPHERE_POS_Z",0.0f);
+
+        env.sphereRad = XML.getValue("SPHERE_RADIUS", 0.0f);
+        env.sphereBufferMul = XML.getValue("SPHERE_BUFFER_MUL", 0.0f);
+        XML.popTag();
+    }
+
+
+    screenPosManual();
+    calculateScreenPlane();
+    updateValues();
+
+}
+
 void testApp::updateValues(){
 
+    epsl->setValue(env.eyeProp,0);
+    ptsl->setValue(env.pointProp,0);
+    adpsl->setValue(env.allowDownPoint,0);
+    mtsl->setValue(env.moveThresh,0);
+    stsl->setValue(env.sternProp,0);
+    uhZxsl->setValue(env.uhZx_Thresh, 0);
+
+    scTog->setValue(env.isScreen,0);
+    spTog->setValue(!env.isScreen,0);
     scRotsl->setValue(env.screenRot, 0);
     scYsl->setValue(env.screenCenter.y, 0);
     scXsl->setValue(env.screenCenter.x, 0);
     scZsl->setValue(env.screenCenter.z, 0);
     scWsl->setValue(env.screenDims.x, 0);
     scHsl->setValue(env.screenDims.y, 0);
+    spXsl->setValue(env.spherePos.x,0);
+    spYsl->setValue(env.spherePos.y, 0);
+    spZsl->setValue(env.spherePos.z, 0);
+    spRsl->setValue(env.sphereRad,0);
+    spBMsl->setValue(env.sphereBufferMul,0);
+
+
 
 }
 
@@ -654,6 +777,8 @@ void testApp::draw(){
         TTF.drawString(scCalString, 200,200);
 	}
 
+
+
 }
 
 
@@ -755,9 +880,11 @@ glEnable(GL_DEPTH_TEST);
         glTranslatef(env.spherePos.x, -(env.spherePos.y - floorPlane.ptPoint.Y), -env.spherePos.z);
 
         ofNoFill();
-        ofSetColor(100,100,100);
+        ofSetColor(150,150,150);
         ofSetLineWidth(1);
         ofSphere(0, 0, 0, env.sphereRad);
+        ofSetColor(0,0,100);
+        ofSphere(0, 0, 0, env.sphereRad * env.sphereBufferMul);
 
         glPopMatrix();
 

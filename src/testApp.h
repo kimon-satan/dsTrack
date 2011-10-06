@@ -42,6 +42,9 @@ public:
     void    screenPosManual();
     void    screenPosAuto();
     void    getScreenCalibrationPoints();
+    void    saveSettings(string fileName);
+    void    openSettings(string filename);
+
 
 private:
 
@@ -92,8 +95,11 @@ private:
 
 	XnPlane3D			floorPlane;
 
-    guiTypeToggle       * spTog, * scTog, * scCalTog;
+    guiTypeToggle       * spTog, * scTog, * scCalTog, *svTog, *opTog;
+    guiTypeSlider       * epsl, * stsl, *uhZxsl, * ptsl, *mtsl, *adpsl;
     guiTypeSlider       * scXsl, * scYsl,  * scZsl, * scRotsl, * scWsl, *scHsl;
+    guiTypeSlider       * spXsl, * spYsl, *spZsl, *spRsl, *spBMsl;
+    guiTypeTextInput    * fileTxtIn;
 
 	int scCalibStage;
 	string scCalString;
@@ -101,6 +107,7 @@ private:
     int outputMode;
 
     ofVec3f calVecs[3];
+
 
 
 

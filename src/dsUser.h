@@ -49,13 +49,14 @@ public:
         screenBuffer.set(1.5,1.5);
         moveThresh = 15;
         sphereRad = 750;
+        sphereBufferMul = 1.5;
 
     };
 
     float           viewScale;
     float			pointProp, eyeProp, sternProp, allowDownPoint;
     bool            isScreen;
-	float		    screenZ, screenD, screenRot, sphereRad;
+	float		    screenZ, screenD, screenRot, sphereRad, sphereBufferMul;
 	ofVec2f			screenDims, screenBuffer;
 
 	ofVec3f         screenP, screenQ, screenR, screenS, screenCenter, screenNormal, spherePos;
@@ -104,6 +105,7 @@ class dsUser{
 	void updateFeatures();
 	void updateScreenIntersections();
 	void updateSphereIntersections();
+	bool solveSphereIntersection(float radius);
 	void calculatePointVector();
 
 	ofImage userMask, depthMask;

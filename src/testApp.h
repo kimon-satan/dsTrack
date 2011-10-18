@@ -3,7 +3,7 @@
 
 #define USE_IR
 //
-#define USE_FILE
+//#define USE_FILE
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
@@ -61,7 +61,7 @@ private:
 #endif
 
     ofxControlPanel gui;
-    myCol userColors[10];
+    myCol userColors[20];
 	ofTrueTypeFont TTF;
 
 	ofxOpenNIContext	Context;

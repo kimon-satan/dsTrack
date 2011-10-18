@@ -32,7 +32,7 @@ void testApp::setup() {
 	currentUserId =0;
 
 	#if defined(USE_FILE)
-	fileName = "morePointing.oni";
+	fileName = "multiUser.oni";
 	setupRecording(fileName);
 	#else
 	setupRecording();
@@ -45,10 +45,10 @@ void testApp::setup() {
     userColors[3] = myCol(255,255,0);
     userColors[4] = myCol(255,110,199);
     userColors[5] = myCol(86,26,139);
-    userColors[6] = myCol(100,100,100);
-    userColors[7] = myCol(100,100,100);
-    userColors[8] = myCol(100,100,100);
-    userColors[9] = myCol(100,100,100);
+
+    for(int i = 6; i < 30; i++){
+        userColors[i] = userColors[i%6];
+    }
 
     env.screenDims.set(4000,3000);
     env.screenBuffer.set(1.5,1.5);
@@ -79,6 +79,7 @@ void testApp::setup() {
     thisUM.dsUsers = &dsUsers[0];
     thisUM.activeUserList = &activeUserList;
     thisUM.env = &env;
+    openSettings(fileTxtIn->getValueText());
 }
 
 void testApp::setupRecording(string _filename) {
@@ -109,12 +110,13 @@ void testApp::setupRecording(string _filename) {
 	userGen.setSmoothing(filterFactor);				// built in openni skeleton smoothing...
 	userGen.setUseMaskPixels(true);
 	userGen.setUseCloudPoints(true);
-	userGen.setMaxNumberOfUsers(8);					// use this to set dynamic max number of users (NB: that a hard upper limit is defined by MAX_NUMBER_USERS in ofxUserGenerator)
+	//userGen.setMaxNumberOfUsers(2);					// use this to set dynamic max number of users (NB: that a hard upper limit is defined by MAX_NUMBER_USERS in ofxUserGenerator)
 	userGen.addUserListener(this);
 
 	//Context.toggleRegisterViewport();  //this fucks up realWorld proj
 	Context.toggleMirror();
 	//hardware.setTiltAngle(0);
+
 
 }
 

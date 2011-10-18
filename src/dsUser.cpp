@@ -28,7 +28,7 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	isCalibrating = false;
 	sendMoveMessage = false;
 	isMoving = false;
-	isBuffer = false;
+//	isBuffer = false;
 	isFakeIntersect = false;
 	bufCount = 0;
 
@@ -63,7 +63,7 @@ void dsUser::updateFeatures(){
         if(isSleeping)isSleeping = false;
 	}
 
-	rot_CoM_rW.set(CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
+	rot_CoM_rW.set(- CoM_rW.X,CoM_rW.Y, CoM_rW.Z);    //correct it for rotation
 	rot_CoM_rW.rotate(env->fRotAngle,env->floorPoint,env->fRotAxis);
 
 	if(rot_CoM_rW.y < env->floorPoint.y + 500){
@@ -85,7 +85,7 @@ void dsUser::updateFeatures(){
 			numCloudPoints += 1;
 
 			cloudPoints[numCloudPoints - 1].Z = pDepthMap[i];
-			cloudPoints[numCloudPoints - 1].X =i%depthGen->getWidth();
+			cloudPoints[numCloudPoints - 1].X = depthGen->getWidth() - (i%depthGen->getWidth());
 			cloudPoints[numCloudPoints - 1].Y =i/depthGen->getWidth();
 		}
 
@@ -222,7 +222,7 @@ void dsUser::updateFeatures(){
 
 		(env->isScreen) ? updateScreenIntersections() : updateSphereIntersections(); //further filtering happens in these functions
 
-        if(isIntersect || isBuffer){
+        if(isIntersect || isFakeIntersect){
             if(!upMoving && !uhMoving){
 
                 if(isMoving){
@@ -306,13 +306,13 @@ void dsUser::updateScreenIntersections(){
 
         isIntersect = true;
         isFakeIntersect = false;
-        isBuffer = false;
+       // isBuffer = false;
 
     }else if(rotIntersect.x > bufP.x && rotIntersect.x < bufQ.x  &&
         rotIntersect.y > bufP.y && rotIntersect.y < bufQ.y){
 
-        isBuffer = true;
-        isIntersect = false;
+      //  isBuffer = true;
+    //    isIntersect = false;
 
         //series of ifs to work out how to make fakeIntersect
 
@@ -333,7 +333,7 @@ void dsUser::updateScreenIntersections(){
 
         isIntersect = false;
         isFakeIntersect = false;
-        isBuffer = false;
+     //   isBuffer = false;
     }
 
 

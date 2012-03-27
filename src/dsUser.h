@@ -46,10 +46,11 @@ public:
         sternProp = 0.8;
         uhZx_Thresh = 100;
         allowDownPoint = 0.5;
-        screenBuffer.set(1.5,1.5);
         moveThresh = 15;
         sphereRad = 750;
         sphereBufferMul = 1.5;
+		screenRad  = 750;
+		screenBufMul = 1.5;
 
     };
 
@@ -57,9 +58,9 @@ public:
     float			pointProp, eyeProp, sternProp, allowDownPoint;
     bool            isScreen;
 	float		    screenZ, screenD, screenRot, sphereRad, sphereBufferMul;
-	ofVec2f			screenDims, screenBuffer;
 
-	ofVec3f         screenP, screenQ, screenR, screenS, screenCenter, screenNormal, spherePos;
+	ofVec3f         screenCenter, screenNormal, spherePos;
+	float			screenRad, screenBufMul;
 
     int             moveThresh, uhZx_Thresh;
 
@@ -83,7 +84,7 @@ class dsUser{
 	void drawMask(ofRectangle dims);
 
 	void drawRWFeatures(bool pointBox = false);
-	void drawPointCloud(bool corrected = true, myCol col = myCol(100,100,100));
+	void drawPointCloud(bool corrected = true, ofColor col = ofColor(100));
 	void drawIntersect();
 	void drawSphereIntersect();
 
@@ -112,7 +113,7 @@ class dsUser{
 	ofxUserGenerator * userGen;
 	ofxDepthGenerator * depthGen;
 	XnPoint3D  * cloudPoints;
-	vector <ofVec3f> rotCloudPoints;
+	deque <ofVec3f> rotCloudPoints;
     environment * env;
 
     int numCloudPoints;
@@ -137,7 +138,7 @@ class dsUser{
 	float sphereRad;
 	ofVec3f spherePos;
 
-	ofVec3f intersection, rotIntersect;
+	ofVec3f intersection;
 
 
 };

@@ -28,7 +28,6 @@ void dsUser::setup(int t_id, ofxUserGenerator * t_userGen, ofxDepthGenerator * t
 	isCalibrating = false;
 	sendMoveMessage = false;
 	isMoving = false;
-//	isBuffer = false;
 	isFakeIntersect = false;
 	bufCount = 0;
 
@@ -112,20 +111,21 @@ void dsUser::updateFeatures(){
 
 	for(int i = 0; i < 10; i++)highestPoints[i].y = rot_CoM_rW.y + i;
 
-	for(int i = 0; i < numCloudPoints; i++){
+	
+	for(deque<ofVec3f>::iterator it = rotCloudPoints.begin(); it != rotCloudPoints.end(); it++){
 
-		if(rotCloudPoints[i].y > highestPoints[0].y &&		//only bother if the point is a contender for highest
-		   rotCloudPoints[i].z < rot_CoM_rW.z + env->uhZx_Thresh &&
-		   rotCloudPoints[i].z > rot_CoM_rW.z - env->uhZx_Thresh &&
-		   rotCloudPoints[i].x < rot_CoM_rW.x + env->uhZx_Thresh &&
-		   rotCloudPoints[i].x > rot_CoM_rW.x - env->uhZx_Thresh
+		if(it->y > highestPoints[0].y &&		//only bother if the point is a contender for highest
+		   it->z < rot_CoM_rW.z + env->uhZx_Thresh &&
+		   it->z > rot_CoM_rW.z - env->uhZx_Thresh &&
+		   it->x < rot_CoM_rW.x + env->uhZx_Thresh &&
+		   it->x > rot_CoM_rW.x - env->uhZx_Thresh
 		   ){
 
 			for(int j = 9; j > -1; j --){ //go through the list highest to lowest
 
-				if(rotCloudPoints[i].y > highestPoints[j].y){
+				if(it->y > highestPoints[j].y){
 
-					highestPoints[j] = rotCloudPoints[i];  //slots it into correct ranking position
+					highestPoints[j] = *it;  //slots it into correct ranking position
 					break;
 
 				}
@@ -176,11 +176,11 @@ void dsUser::updateFeatures(){
 	ofVec3f furthestPoints[10];
 	float distances [10] = {0};
 
-    for(int i = 0; i < numCloudPoints; i ++){
+    for(deque<ofVec3f>::iterator it = rotCloudPoints.begin(); it != rotCloudPoints.end(); it++){
 
-        if(rotCloudPoints[i].y > sternum.y  - (pointThresh * env->allowDownPoint)){
+        if(it->y > sternum.y  - (pointThresh * env->allowDownPoint)){
 
-            float dist = rotCloudPoints[i].distanceSquared(sternum);
+            float dist = it->distanceSquared(sternum);
             if( dist > pow(pointThresh,2) && dist < pow(pointThresh * 2, 2)){
 
                 for(int j = 9; j > -1; j --){ //go through the list highest to lowest
@@ -188,7 +188,7 @@ void dsUser::updateFeatures(){
 					if(dist > distances[j]){
 
 						distances[j] = dist;  //slots it into correct ranking position
-						furthestPoints[j] = rotCloudPoints[i];
+						furthestPoints[j] = *it;
 						break;
 
 					}
@@ -291,60 +291,42 @@ void dsUser::updateScreenIntersections(){
 						 eye_Pos.z + u_dir.z * t
 						 );
 
-	//rotate to axis to simplify bounds problem
 
-    ofVec3f rotP = env->screenP.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
-	ofVec3f	rotQ = env->screenQ.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
-
-	ofVec2f bufP(env->screenCenter.x - (env->screenDims.x * env->screenBuffer.x/2), env->screenCenter.y - (env->screenDims.y * env->screenBuffer.y/2));
-	ofVec2f bufQ(env->screenCenter.x + (env->screenDims.x * env->screenBuffer.x/2), env->screenCenter.y + (env->screenDims.y * env->screenBuffer.y/2));
-
-    rotIntersect = intersection.getRotated(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
-
-	if(rotIntersect.x > rotP.x && rotIntersect.x < rotQ.x &&
-        rotIntersect.y > rotP.y && rotIntersect.y < rotQ.y){
+	if(intersection.distance(env->screenCenter) < env->screenRad){
 
         isIntersect = true;
         isFakeIntersect = false;
-       // isBuffer = false;
+       
 
-    }else if(rotIntersect.x > bufP.x && rotIntersect.x < bufQ.x  &&
-        rotIntersect.y > bufP.y && rotIntersect.y < bufQ.y){
+    }else if(intersection.distance(env->screenCenter) < env->screenRad * env->screenBufMul){
 
-      //  isBuffer = true;
-    //    isIntersect = false;
-
-        //series of ifs to work out how to make fakeIntersect
-
-        if(rotIntersect.x <  rotP.x){
-            rotIntersect.x = rotP.x;
-        }else if(rotIntersect.x >  rotQ.x){
-            rotIntersect.x = rotQ.x;
-        }
-
-        if(rotIntersect.y <  rotP.y){
-            rotIntersect.y = rotP.y;
-        }else if(rotIntersect.y >  rotQ.y){
-            rotIntersect.y = rotQ.y;
-        }
-
+        isIntersect = false;
+		isFakeIntersect = true;
+		
+		//fake intersection is a point on the edge of the circle
+		ofVec3f dir(intersection - env->screenCenter);
+		dir.normalize();
+		ofVec3f fp(env->screenCenter + dir * env->screenRad); 
+		intersection.set(fp);
 
     }else{
 
         isIntersect = false;
         isFakeIntersect = false;
-     //   isBuffer = false;
+    
     }
 
 
 }
 
 ofVec2f dsUser::getScreenIntersect(){
+	
+	//normalised 2d Vector with screen center as centre;
+	ofVec3f rot_i(intersection);
+	rot_i.rotate(-env->screenRot, env->screenCenter, ofVec3f(0,1,0));
+    ofVec2f i(rot_i.x - env->screenCenter.x, rot_i.y - env->screenCenter.y);
+    i /= env->screenRad;
 
-    ofVec2f i(rotIntersect.x - env->screenCenter.x, rotIntersect.y - env->screenCenter.y);
-    i /= env->screenDims;
-
-    cout << i.x <<","<< i.y << "\n";
     return i;
 
 }
@@ -485,7 +467,7 @@ void dsUser::drawMask(ofRectangle dims){
 }
 
 
-void dsUser::drawPointCloud(bool corrected, myCol col) {
+void dsUser::drawPointCloud(bool corrected, ofColor col) {
 
     if(!isSleeping){
 	glPushMatrix();
@@ -493,16 +475,11 @@ void dsUser::drawPointCloud(bool corrected, myCol col) {
 	glBegin(GL_POINTS);
 
 
-		for(int i = 0; i < numCloudPoints; i ++) {
-
-			if(!corrected){
-			glColor4ub(150, 150, 150, 255);
-			glVertex3f(cloudPoints[i].X * env->viewScale, -(cloudPoints[i].Y - env->floorPoint.y) * env->viewScale, -cloudPoints[i].Z * env->viewScale);
-			}else{
-
-			glColor4ub(col.red, col.blue, col.green, 255);
-			glVertex3f(rotCloudPoints[i].x * env->viewScale, -(rotCloudPoints[i].y - env->floorPoint.y) * env->viewScale, -rotCloudPoints[i].z * env->viewScale);
-			}
+		for(deque<ofVec3f>::iterator it = rotCloudPoints.begin(); it != rotCloudPoints.end(); it++){
+			
+			glColor4ub(col.r,col.g,col.b, 255);
+			glVertex3f(it->x * env->viewScale, -(it->y - env->floorPoint.y) * env->viewScale, -it->z * env->viewScale);
+			
 
 		}
 

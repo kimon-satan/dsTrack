@@ -41,7 +41,6 @@ public:
     void    calculateScreenPlane();
     void    screenPosManual();
     void    screenPosAuto();
-    void    getScreenCalibrationPoints();
     void    saveSettings(string fileName);
     void    openSettings(string filename);
 
@@ -61,10 +60,10 @@ private:
 #endif
 
     ofxControlPanel gui;
-    myCol userColors[20];
+    ofColor userColors[8];
 	ofTrueTypeFont TTF;
 
-	ofxOpenNIContext	Context;
+	ofxOpenNIContext	thisContext;
 	ofxDepthGenerator	depthGen;
 
 	ofxUserGenerator	userGen;
@@ -74,7 +73,7 @@ private:
 	ofxHardwareDriver	hardware;
 #endif
 
-	dsUser  		        dsUsers[20];
+	dsUser  		        dsUsers[8];
 	vector<int>             activeUserList;
 	userManager             thisUM;
     environment             env;
@@ -97,7 +96,7 @@ private:
 
     guiTypeToggle       * spTog, * scTog, * scCalTog, *svTog, *opTog;
     guiTypeSlider       * epsl, * stsl, *uhZxsl, * ptsl, *mtsl, *adpsl;
-    guiTypeSlider       * scXsl, * scYsl,  * scZsl, * scRotsl, * scWsl, *scHsl;
+    guiTypeSlider       * scXsl, * scYsl,  * scZsl, * scRotsl, * scRsl, *scBMsl;
     guiTypeSlider       * spXsl, * spYsl, *spZsl, *spRsl, *spBMsl;
     guiTypeTextInput    * fileTxtIn;
 
